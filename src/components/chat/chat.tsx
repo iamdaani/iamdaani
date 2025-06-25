@@ -284,18 +284,7 @@ const Chat = () => {
             </div>
           }
         />
-        <div className="pt-2">
-          <GitHubButton
-            href="https://github.com/toukoum/portfolio"
-            data-color-scheme="no-preference: light; light: light; dark: light_high_contrast;"
-            data-size="large"
-            data-show-count="true"
-            aria-label="Star toukoum/portfolio on GitHub"
-          >
-            Star
-          </GitHubButton>
-        </div>
-      </div>
+      
 
       {/* Fixed Avatar Header with Gradient */}
       <div

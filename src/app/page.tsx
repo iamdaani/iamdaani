@@ -93,18 +93,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* GitHub button */}
-      <div className="absolute top-6 right-8 z-20">
-        <GitHubButton
-          href="https://github.com/toukoum/portfolio"
-          data-color-scheme="no-preference: light; light: light; dark: light_high_contrast;"
-          data-size="large"
-          data-show-count="true"
-          aria-label="Star toukoum/portfolio on GitHub"
-        >
-          Star
-        </GitHubButton>
-      </div>
 
       <div className="absolute top-6 left-6 z-20">
         <button
@@ -132,10 +120,10 @@ export default function Home() {
         </div>
 
         <h2 className="text-secondary-foreground mt-1 text-xl font-semibold md:text-2xl">
-          Hey, I'm Raphael 👋
+          Hey, I'm Ahmad 👋
         </h2>
         <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
-          AI portfolio
+          Ahmad Yar
         </h1>
       </motion.div>
 
