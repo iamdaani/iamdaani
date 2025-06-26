@@ -47,7 +47,7 @@ const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery }) => {
       y: 0,
       transition: {
         duration: 0.4,
-        ease: [0.25, 0.1, 0.25, 1],
+        ease: [0.25, 0.1, 0.25, 1] as const,
       },
     },
   };
@@ -60,7 +60,7 @@ const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery }) => {
       variants={containerVariants}
     >
       {/* Welcome message */}
-      <motion.div className="mb-8 text-center" variants={itemVariants}>
+      <motion.div className="mb-8 text-center" variants={itemVariants as any}>
         <h2 className="mb-3 text-2xl font-semibold">
             I'm Raphael's digital twin
         </h2>
@@ -79,7 +79,7 @@ const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery }) => {
             key={index}
             className="bg-accent hover:bg-accent/80 flex w-full items-center rounded-lg px-4 py-3 transition-colors"
             onClick={() => submitQuery(question.text)}
-            variants={itemVariants}
+            variants={itemVariants as any}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >

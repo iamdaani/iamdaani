@@ -25,7 +25,7 @@ const MOTION_CONFIG = {
   exit: { opacity: 0, y: 20 },
   transition: {
     duration: 0.3,
-    ease: 'easeOut',
+    ease: [0.4, 0, 0.2, 1] as const,
   },
 };
 
@@ -59,7 +59,13 @@ export function SimplifiedChatView({
   console.log('currentTool', currentTool);
 
   return (
-    <motion.div {...MOTION_CONFIG} className="flex h-full w-full flex-col px-4">
+    <motion.div
+      initial={MOTION_CONFIG.initial}
+      animate={MOTION_CONFIG.animate}
+      exit={MOTION_CONFIG.exit}
+      transition={MOTION_CONFIG.transition}
+      className="flex h-full w-full flex-col px-4"
+    >
       {/* Single scrollable container for both tool and text content */}
       <div className="custom-scrollbar flex h-full w-full flex-col overflow-y-auto">
         {/* Tool invocation result - displayed at the top */}

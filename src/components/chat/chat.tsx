@@ -1,5 +1,6 @@
 'use client';
 import { useChat } from '@ai-sdk/react';
+//import { useChat } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -284,7 +285,7 @@ const Chat = () => {
             </div>
           }
         />
-      
+      </div>
 
       {/* Fixed Avatar Header with Gradient */}
       <div
@@ -310,13 +311,16 @@ const Chat = () => {
           <AnimatePresence>
             {latestUserMessage && !currentAIMessage && (
               <motion.div
-                {...MOTION_CONFIG}
+                initial={MOTION_CONFIG.initial}
+                animate={MOTION_CONFIG.animate}
+                exit={MOTION_CONFIG.exit}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                 className="mx-auto flex max-w-3xl px-4"
               >
                 <ChatBubble variant="sent">
                   <ChatBubbleMessage>
                     <ChatMessageContent
-                      message={latestUserMessage}
+                      message={latestUserMessage as any}
                       isLast={true}
                       isLoading={false}
                       reload={() => Promise.resolve(null)}
@@ -341,14 +345,17 @@ const Chat = () => {
               <motion.div
                 key="landing"
                 className="flex min-h-full items-center justify-center"
-                {...MOTION_CONFIG}
+                initial={MOTION_CONFIG.initial}
+                animate={MOTION_CONFIG.animate}
+                exit={MOTION_CONFIG.exit}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
               >
                 <ChatLanding submitQuery={submitQuery} />
               </motion.div>
             ) : currentAIMessage ? (
               <div className="pb-4">
                 <SimplifiedChatView
-                  message={currentAIMessage}
+                  message={currentAIMessage as any}
                   isLoading={isLoading}
                   reload={reload}
                   addToolResult={addToolResult}
@@ -358,7 +365,10 @@ const Chat = () => {
               loadingSubmit && (
                 <motion.div
                   key="loading"
-                  {...MOTION_CONFIG}
+                  initial={MOTION_CONFIG.initial}
+                  animate={MOTION_CONFIG.animate}
+                  exit={MOTION_CONFIG.exit}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                   className="px-4 pt-18"
                 >
                   <ChatBubble variant="received">
