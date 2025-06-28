@@ -23,7 +23,7 @@ export function Presentation() {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: [0.42, 0, 0.58, 1], // fixed: replaced string with cubic bezier array
+        ease: [0.42, 0, 0.58, 1] as const, // fixed: replaced string with cubic bezier array
       },
     },
   };
@@ -35,7 +35,7 @@ export function Presentation() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: "easeInOut", // use a valid string easing
+        ease: "easeInOut" as const, // use a valid string easing
         delay: 0.2,
       },
     },
