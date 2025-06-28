@@ -6,9 +6,9 @@ import React from 'react';
 
 export function Presentation() {
   const profile = {
-    name: 'Raphael Giraud',
-    age: '21 years old',
-    location: 'Paris, France',
+    name: 'Ahmad Yar',
+    age: '20 years old',
+    location: 'Lahore, Pakistan',
     description:
       "Hey 👋\nI'm Raph also known as Toukoum. I'm a developer specializing in AI at 42 Paris. I'm working at LightOn AI in Paris. I'm passionate about AI, tech, Entrepreneurship and SaaS tech.",
     src: '/profil-raph.png',
