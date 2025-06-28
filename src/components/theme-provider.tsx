@@ -11,5 +11,3 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     </NextThemesProvider>
   )
 }
-
-// Remove or do not use <ThemeProvider> in your _app or layout files
