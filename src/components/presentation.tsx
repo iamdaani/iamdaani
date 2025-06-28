@@ -1,16 +1,14 @@
 'use client';
 
-import { motion, easeInOut } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import React from 'react';
 
 export function Presentation() {
-  // Personal information
   const profile = {
     name: 'Raphael Giraud',
     age: '21 years old',
     location: 'Paris, France',
-    // Add a newline character after the emoji
     description:
       "Hey 👋\nI'm Raph also known as Toukoum. I'm a developer specializing in AI at 42 Paris. I'm working at LightOn AI in Paris. I'm passionate about AI, tech, Entrepreneurship and SaaS tech.",
     src: '/profil-raph.png',
@@ -18,7 +16,6 @@ export function Presentation() {
       'https://images.unsplash.com/photo-1610216705422-caa3fcb6d158?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3',
   };
 
-  // Animation variants for text elements
   const textVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -26,12 +23,11 @@ export function Presentation() {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: easeInOut,
+        ease: [0.42, 0, 0.58, 1], // fixed: replaced string with cubic bezier array
       },
     },
   };
 
-  // Animation for the entire paragraph rather than word-by-word
   const paragraphAnimation = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -39,7 +35,7 @@ export function Presentation() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: 'easeOut',
+        ease: "easeInOut", // use a valid string easing
         delay: 0.2,
       },
     },
@@ -48,7 +44,7 @@ export function Presentation() {
   return (
     <div className="mx-auto w-full max-w-5xl py-6 font-sans">
       <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
-        {/* Image section */}
+        {/* Image Section */}
         <div className="relative mx-auto aspect-square w-full max-w-sm">
           <div className="relative h-full w-full overflow-hidden rounded-2xl">
             <motion.div
@@ -64,7 +60,6 @@ export function Presentation() {
                 height={500}
                 className="h-full w-full object-cover object-center"
                 onError={(e) => {
-                  // Fallback to placeholder if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.src = profile.fallbackSrc;
                 }}
@@ -73,7 +68,7 @@ export function Presentation() {
           </div>
         </div>
 
-        {/* Text content section */}
+        {/* Text Content */}
         <div className="flex flex-col space-y">
           <motion.div
             initial="hidden"
@@ -99,7 +94,7 @@ export function Presentation() {
             {profile.description}
           </motion.p>
 
-          {/* Tags/Keywords */}
+          {/* Tags */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
