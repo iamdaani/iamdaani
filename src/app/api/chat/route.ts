@@ -13,21 +13,21 @@ export const config = {
 
 const model = groq('llama3-8b-8192');
 
-// Same keyword detector...
+// Keyword-based tool detection
 function detectToolCall(msg: string): keyof typeof toolRegistry | null {
   const t = msg.toLowerCase();
   if (/(contact|reach you|how can i contact)/.test(t)) return 'getContact';
-  if (/(resume|cv|background)/.test(t))   return 'getResume';
+  if (/(resume|cv|background)/.test(t)) return 'getResume';
   if (/(projects?|work|portfolio)/.test(t)) return 'getProjects';
-  if (/(skills?|strengths)/.test(t))      return 'getSkills';
-  if (/(presentation|about you)/.test(t))  return 'getPresentation';
-  if (/(sport|sports)/.test(t))           return 'getSports';
-  if (/(craziest|funny)/.test(t))         return 'getCrazy';
-  if (/(internship)/.test(t))             return 'getInternship';
+  if (/(skills?|strengths)/.test(t)) return 'getSkills';
+  if (/(presentation|about you)/.test(t)) return 'getPresentation';
+  if (/(sport|sports)/.test(t)) return 'getSports';
+  if (/(craziest|funny)/.test(t)) return 'getCrazy';
+  if (/(internship)/.test(t)) return 'getInternship';
   return null;
 }
 
-// Helper to wrap any string into a proper SSE stream
+// Wrap tool result in SSE so frontend can consume normally
 function sseFromString(text: string): Response {
   const encoder = new TextEncoder();
   return new Response(
@@ -53,46 +53,38 @@ export async function POST(req: NextRequest): Promise<Response> {
     const { messages: raw } = await req.json();
     const rawMessages = Array.isArray(raw) ? raw : [];
 
-    // Inject system
+    // Inject system prompt
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...rawMessages,
     ];
 
-    // Inspect last user message
+    // Tool detection from last user message
     const last = messages[messages.length - 1];
-    const userMsg = last.role === 'user' ? last.content : '';
+    const userMsg = last?.role === 'user' ? last.content : '';
     const toolName = detectToolCall(userMsg);
 
-    if (toolName) {
-      // Try the tool
+    if (toolName && toolRegistry[toolName]) {
       try {
         const tool = toolRegistry[toolName];
         const result = await tool.execute({}, {
-          toolCallId: 'direct-tool',
+          toolCallId: 'manual-detect',
           messages: [],
         });
-        const text = typeof result === 'string'
-          ? result
-          : JSON.stringify(result);
+        const text = typeof result === 'string' ? result : JSON.stringify(result);
         return sseFromString(text);
-      } catch (toolErr) {
-        console.error('Tool execution error:', toolErr);
-        return sseFromString(
-          `Error running tool ${toolName}: ${
-            (toolErr as Error).message || 'unknown'
-          }`
-        );
+      } catch (err) {
+        console.error('Tool error:', err);
+        return sseFromString(`Tool ${toolName} failed: ${(err as Error).message}`);
       }
     }
 
-    // No tool → stream the LLM response
+    // No tool → stream LLM response
     const stream = await streamText({ model, messages });
     return stream.toDataStreamResponse();
-  } catch (e) {
-    console.error('Chat route error:', e);
-    // Send a minimal SSE error so frontend doesn’t hang
-    return sseFromString('Server error, please try again later.');
+  } catch (err) {
+    console.error('Chat route fatal error:', err);
+    return sseFromString('Internal server error. Please try again later.');
   }
 }
 
