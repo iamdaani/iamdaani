@@ -1,9 +1,15 @@
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 45,
+};
+
 import { NextRequest } from 'next/server';
 import { streamText } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { SYSTEM_PROMPT } from './prompt';
 import { toolRegistry } from './tools/tool-registry';
 import type { ToolExecutionOptions } from 'ai';
+
 
 export const maxDuration = 30;
 const model = groq('llama3-8b-8192');
