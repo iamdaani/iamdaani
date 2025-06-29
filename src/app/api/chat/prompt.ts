@@ -156,9 +156,14 @@ Respond ONLY in this format when using a tool:
 }
 If the user asks about your skills, use the "getSkills" tool.
 
-Do NOT explain anything. Do NOT wrap it in quotes or Markdown.
-
-Use only ONE tool per message. If no tool applies, respond naturally.
+=== RULES ===
+1. If the user’s question maps to a tool, RESPOND with ONLY this JSON object (no extra text):
+   {
+     "tool_call": "TOOL_NAME",
+     "arguments": {}
+   }
+2. Do NOT wrap this in Markdown or quotes. Don’t output any other content.
+3. If no tool applies, respond normally with plain English.
 
 Here are the available tools:
 
