@@ -3,66 +3,81 @@ import { streamText } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { SYSTEM_PROMPT } from './prompt';
 import { toolRegistry } from './tools/tool-registry';
+import type { ToolExecutionOptions } from 'ai';
 
 export const maxDuration = 30;
-
-// ✅ Model setup
 const model = groq('llama3-8b-8192');
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const body = await req.json();
-    let { messages } = body;
+    const { messages: rawMessages } = await req.json();
+    let messages = Array.isArray(rawMessages) ? rawMessages : [];
 
-    // ✅ Inject system prompt
+    // 1️⃣ Inject system prompt
     if (typeof SYSTEM_PROMPT === 'string') {
       messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages];
     } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
       messages = [SYSTEM_PROMPT, ...messages];
     }
 
-    // ✅ Call the Groq model
-    const result = await streamText({
-      model,
-      messages,
-    });
+    // 2️⃣ Call the LLM
+    const maybeStream = await streamText({ model, messages });
 
-    // ✅ Collect stream into string
-    let textResponse = '';
-    for await (const delta of result.textStream) {
-      // delta is string not object → just add directly
-      textResponse += delta;
+    // 3️⃣ Extract text safely
+    let fullText: string;
+    if (typeof maybeStream === 'string') {
+      fullText = maybeStream;
+    } else if ('text' in maybeStream && maybeStream.text instanceof Promise) {
+      // NOTE: no parentheses after .text — it's already a Promise<string>
+      fullText = await maybeStream.text;
+    } else {
+      // Fallback if structure differs
+      fullText = String(maybeStream);
     }
+    fullText = fullText.trim();
 
-    // ✅ Try to detect and run tool manually
+    // 4️⃣ Try parsing for a tool call
     try {
-      const parsed = JSON.parse(textResponse.trim());
-      const toolName = parsed.tool_call as keyof typeof toolRegistry;
+      const parsed = JSON.parse(fullText);
+      const toolName = parsed?.tool_call;
+      const toolArgs = parsed?.arguments ?? {};
 
-      if (toolName && toolRegistry[toolName]) {
-        const toolResult = await toolRegistry[toolName].execute(parsed.arguments || {}, {
+      if (
+        typeof toolName === 'string' &&
+        toolName in toolRegistry
+      ) {
+        const tool = toolRegistry[toolName as keyof typeof toolRegistry];
+        const options: ToolExecutionOptions = {
           toolCallId: 'manual-tool-call',
           messages: [],
-            }); // <-- second arg required
-        const finalResponse = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
-        return new Response(finalResponse);
+        };
+        const toolResult = await tool.execute(toolArgs, options);
+        const output = typeof toolResult === 'string'
+          ? toolResult
+          : JSON.stringify(toolResult);
+        return new Response(output, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        });
       }
-    } catch (e) {
-      // Not a tool call or malformed JSON — fall back to AI reply
+    } catch {
+      // not a tool call → fall through
     }
 
-    // ✅ Return normal LLM response
-    return new Response(textResponse);
-
-  } catch (error) {
-    console.error('Global error:', error);
-    return new Response('Server error', { status: 500 });
+    // 5️⃣ Fallback: return the plain LLM response
+    return new Response(fullText, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  } catch (err) {
+    console.error('API error:', err);
+    return new Response('Internal server error', { status: 500 });
   }
 }
 
-export async function GET() {
-  return new Response("Use POST method to send chat messages.", {
+export async function GET(): Promise<Response> {
+  return new Response('Use POST to chat.', {
     status: 405,
-    headers: { 'Content-Type': 'text/plain' }
+    headers: { 'Content-Type': 'text/plain' },
   });
 }
