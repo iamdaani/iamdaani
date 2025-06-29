@@ -1,82 +1,106 @@
 // src/app/api/chat/route.ts
 import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
-import { groq } from '@ai-sdk/groq';
 import { SYSTEM_PROMPT } from './prompt';
 import { toolRegistry } from './tools/tool-registry';
-import type { ToolExecutionOptions } from 'ai';
 
-// Increase Vercel timeout
+const MODEL_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL_API_KEY = process.env.OPENROUTER_API_KEY;
+
 export const config = {
   runtime: 'nodejs',
   maxDuration: 45,
 };
 
-const model = groq('llama3-8b-8192');
-
-/** 
- * Keyword-based detection of which tool to call.
- * Returns the key of toolRegistry, or null.
- */
-function detectToolCall(msg: string): keyof typeof toolRegistry | null {
-  const t = msg.trim().toLowerCase();
-  if (/(contact|reach you|how can i contact)/.test(t)) return 'getContact';
-  if (/(resume|cv|background)/.test(t)) return 'getResume';
-  if (/(projects?|work|portfolio)/.test(t)) return 'getProjects';
-  if (/(skills?|strengths)/.test(t)) return 'getSkills';
-  if (/(presentation|about you)/.test(t)) return 'getPresentation';
-  if (/(sport|sports)/.test(t)) return 'getSports';
-  if (/(craziest|funny)/.test(t)) return 'getCrazy';
-  if (/(internship)/.test(t)) return 'getInternship';
+function detectToolCall(message: string): keyof typeof toolRegistry | null {
+  const text = message.toLowerCase();
+  if (/(contact|reach you|how can i contact)/.test(text)) return 'getContact';
+  if (/(resume|cv|background)/.test(text)) return 'getResume';
+  if (/(projects?|work|portfolio)/.test(text)) return 'getProjects';
+  if (/(skills?|strengths)/.test(text)) return 'getSkills';
+  if (/(presentation|about you)/.test(text)) return 'getPresentation';
+  if (/(sport|sports)/.test(text)) return 'getSports';
+  if (/(craziest|funny)/.test(text)) return 'getCrazy';
+  if (/(internship)/.test(text)) return 'getInternship';
   return null;
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  // 1) Parse incoming messages
-  const { messages: raw } = await req.json().catch(() => ({}));
-  const userMessages = Array.isArray(raw) ? raw : [];
-
-  // 2) Build the base conversation with system prompt
-  const baseMessages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...userMessages,
-  ];
-
-  // 3) Look at the last user message and detect a tool
-  const last = baseMessages[baseMessages.length - 1];
-  const text = last.role === 'user' ? last.content : '';
-  const toolName = detectToolCall(text);
-
-  let fullMessages = baseMessages;
-
-  if (toolName && toolRegistry[toolName]) {
-    // 4) Execute the tool immediately
-    let toolOutput: string;
-    try {
-      const tool: any = toolRegistry[toolName];
-      const res = await tool.execute({}, {
-        toolCallId: 'manual-tool',
-        messages: [],
-      } as ToolExecutionOptions);
-      toolOutput = typeof res === 'string' ? res : JSON.stringify(res);
-    } catch (e) {
-      console.error(`Tool ${toolName} failed:`, e);
-      toolOutput = `⚠️ Error running ${toolName}: ${((e as Error).message)}`;
+  try {
+    const { messages: rawMessages } = await req.json();
+    if (!Array.isArray(rawMessages)) {
+      return new Response('Invalid payload', { status: 400 });
     }
 
-    // 5) Inject the tool’s output as the assistant’s reply
-    fullMessages = [
-      ...baseMessages,
-      { role: 'assistant', content: toolOutput },
+    const messages = [
+      ...(typeof SYSTEM_PROMPT === 'string'
+        ? [{ role: 'system', content: SYSTEM_PROMPT }]
+        : SYSTEM_PROMPT.role
+        ? [SYSTEM_PROMPT]
+        : []),
+      ...rawMessages,
     ];
-  }
 
-  // 6) Stream *always* via the LLM’s SSE path
-  //    (this includes both normal chat and our injected tool response)
-  const chatStream = await streamText({ model, messages: fullMessages });
-  return chatStream.toDataStreamResponse();
+    const lastMsg = messages[messages.length - 1];
+    const userText = lastMsg?.role === 'user' ? lastMsg.content : '';
+
+    // Step 1: Keyword tool call detection
+    const toolName = detectToolCall(userText);
+    if (toolName && toolRegistry[toolName]) {
+      const tool = toolRegistry[toolName];
+      const toolResult = await tool.execute({}, {
+        toolCallId: 'manual-tool',
+        messages: [],
+      });
+      const output = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+      return new Response(output, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+
+    // Step 2: Call OpenRouter model (Mistral Small 3.2)
+    const response = await fetch(MODEL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MODEL_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://yourdomain.com',
+        'X-Title': 'MyAgent',
+      },
+      body: JSON.stringify({
+        model: 'mistralai/mistral-small-3.2-24b-instruct',
+        messages,
+        tools: Object.entries(toolRegistry).map(([name, tool]) => ({
+          type: 'function',
+          function: {
+            name,
+            description: tool.description ?? name,
+            parameters: tool.parameters,
+          },
+        })),
+        tool_choice: 'auto',
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Model call failed', await response.text());
+      return new Response('Model call failed', { status: 500 });
+    }
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || 'No reply';
+
+    return new Response(reply, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  } catch (err) {
+    console.error('Handler error:', err);
+    return new Response('Internal server error', { status: 500 });
+  }
 }
 
-export async function GET(): Promise<Response> {
+export async function GET() {
   return new Response('Use POST to chat.', { status: 405 });
 }
