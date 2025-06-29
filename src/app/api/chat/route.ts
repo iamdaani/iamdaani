@@ -6,16 +6,15 @@ import { SYSTEM_PROMPT } from './prompt';
 import { toolRegistry } from './tools/tool-registry';
 import type { ToolExecutionOptions } from 'ai';
 
-// Allow up to 45 s on Vercel
+// Give yourself a bit more time on Vercel
 export const config = {
   runtime: 'nodejs',
   maxDuration: 45,
 };
 
-// Your Groq model
 const model = groq('llama3-8b-8192');
 
-/** Keyword‑based detector for tool calls. */
+// Simple keyword detector
 function detectToolCall(msg: string): keyof typeof toolRegistry | null {
   const t = msg.toLowerCase();
   if (/(contact|reach you|how can i contact)/.test(t)) return 'getContact';
@@ -31,51 +30,52 @@ function detectToolCall(msg: string): keyof typeof toolRegistry | null {
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const payload = await req.json();
-    const raw = Array.isArray(payload.messages) ? payload.messages : [];
-    
-    // 1) Inject system prompt
+    const { messages: raw } = await req.json();
+    const rawMessages = Array.isArray(raw) ? raw : [];
+
+    // 1️⃣ Inject system prompt
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
-      ...raw,
+      ...rawMessages,
     ];
 
-    // 2) Check last user message for a tool request
+    // 2️⃣ Detect tool
     const last = messages[messages.length - 1];
     const userText = last.role === 'user' ? last.content : '';
     const toolName = detectToolCall(userText);
 
     if (toolName) {
-      // 3) Run the tool immediately
+      // 3️⃣ Execute tool
       const tool = toolRegistry[toolName];
-      const result = await tool.execute({}, {
+      const toolResult = await tool.execute({}, {
         toolCallId: 'direct-tool',
         messages: [],
       });
-      const output = typeof result === 'string' ? result : JSON.stringify(result);
+      const output =
+        typeof toolResult === 'string'
+          ? toolResult
+          : JSON.stringify(toolResult);
 
-      return new Response(output, {
+      // 4️⃣ Return SSE stream with the tool output as a single "data:" message
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(`data: ${output}\n\n`));
+          controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+          controller.close();
+        }
+      });
+
+      return new Response(stream, {
         status: 200,
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Content-Type': 'text/event-stream' }
       });
     }
 
-    // 4) Fallback: run full chat completion
-    const completion = await streamText({ model, messages });
-    // Groq (via ai-sdk) returns a string or object with .text(): handle both:
-    let fullText: string;
-    if (typeof completion === 'string') {
-      fullText = completion;
-    } else if ('text' in completion && completion.text instanceof Promise) {
-      fullText = await completion.text;
-    } else {
-      fullText = String(completion);
-    }
+    // 5️⃣ Fallback to streaming LLM
+    const aiStream = await streamText({ model, messages });
+    return aiStream.toDataStreamResponse();
 
-    return new Response(fullText.trim(), {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' },
-    });
   } catch (err) {
     console.error('Chat route error:', err);
     return new Response('Internal server error', { status: 500 });
