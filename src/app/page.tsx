@@ -38,7 +38,6 @@ const questionConfig = [
 /* ---------- component ---------- */
 export default function Home() {
   const [input, setInput] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false); // Add this line
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -94,6 +93,7 @@ export default function Home() {
         </div>
       </div>
 
+
       <div className="absolute top-6 left-6 z-20">
         <button
           onClick={() => goToChat('Are you looking for an internship?')}
@@ -116,25 +116,7 @@ export default function Home() {
         animate="visible"
       >
         <div className="z-100">
-          <WelcomeModal
-            trigger={
-              <button
-                className="relative z-10 h-52 w-48 overflow-hidden sm:h-72 sm:w-72 focus:outline-none"
-                style={{ border: 'none', background: 'none', padding: 0 }}
-                aria-label="Open About Modal"
-                type="button"
-              >
-                <Image
-                  src="/landing-memojis.png"
-                  alt="Hero memoji"
-                  width={2000}
-                  height={2000}
-                  priority
-                  className="translate-y-14 scale-[2] object-cover"
-                />
-              </button>
-            }
-          />
+          <WelcomeModal />
         </div>
 
         <h2 className="text-secondary-foreground mt-1 text-xl font-semibold md:text-2xl">
