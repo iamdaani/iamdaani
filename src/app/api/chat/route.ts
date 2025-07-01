@@ -1,77 +1,75 @@
 // src/app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { SYSTEM_PROMPT } from './prompt';
 
 export const config = {
   runtime: 'nodejs',
   maxDuration: 45,
 };
 
-// Point official OpenAI client at OpenRouter
-const client = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY!,
+// Set up OpenAI SDK with OpenRouter
+const openai = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY!,
+  defaultHeaders: {
+    'HTTP-Referer': 'https://www.ahmadyar.site/', // optional but recommended
+    'X-Title': 'Ahmad Yar',                  // optional
+  },
 });
 
-export async function POST(req: NextRequest) {
-  let body: any;
+// Helper to format errors
+function formatError(error: unknown) {
+  if (!error) return 'Unknown error';
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
   try {
-    body = await req.json();
+    return JSON.stringify(error, null, 2);
   } catch {
-    return new NextResponse('Invalid JSON', { status: 400 });
-  }
-
-  let { messages } = body;
-  if (!Array.isArray(messages)) {
-    return new NextResponse('`messages` must be an array', { status: 400 });
-  }
-
-  // Flatten content to string and log payload
-  messages = messages.map((m: any) => {
-    let contentStr: string;
-    if (typeof m.content === 'string') {
-      contentStr = m.content;
-    } else if (typeof m.content === 'object') {
-      // turn arrays or objects into JSON text
-      contentStr = JSON.stringify(m.content);
-      console.warn(`⚠️ Converted non‑string content to JSON string:`, m.content);
-    } else {
-      contentStr = String(m.content);
-    }
-    return { role: m.role, content: contentStr };
-  });
-  const payload = {
-    model: 'mistralai/mistral-small-3.2-24b-instruct-2506',  // try this ID
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages,
-    ],
-    stream: false,  // non-streaming for now
-  };
-  console.log('🔔 Sending payload to OpenRouter:', JSON.stringify(payload, null, 2));
-
-  try {
-    const completion = await client.chat.completions.create(payload);
-    // Ensure completion is not a stream
-    if (!('choices' in completion)) {
-      console.error('Unexpected response format (no choices property)', completion);
-      return new NextResponse('Invalid response format', { status: 502 });
-    }
-    const reply = completion.choices[0]?.message?.content;
-    if (typeof reply !== 'string') {
-      console.error('Unexpected response format', completion);
-      return new NextResponse('Invalid response format', { status: 502 });
-    }
-    return new NextResponse(reply, { status: 200, headers: { 'Content-Type': 'text/plain' } });
-  } catch (e: any) {
-    console.error('OpenRouter error:', e);
-    const status = e.response?.status || 500;
-    const text = e.response?.body || e.message || 'Unknown error';
-    return new NextResponse(`Model error ${status}: ${text}`, { status });
+    return 'Unserializable error';
   }
 }
 
-export async function GET() {
-  return new NextResponse('Use POST to chat.', { status: 405 });
+export async function POST(req: NextRequest): Promise<Response> {
+  try {
+    const body = await req.json();
+    const { messages } = body;
+
+    // Validate messages
+    if (!Array.isArray(messages)) {
+      return new NextResponse('`messages` must be an array', { status: 400 });
+    }
+
+    // Make sure there’s at least one user message
+    const hasUserMessage = messages.some(m => m.role === 'user');
+    if (!hasUserMessage) {
+      return new NextResponse('At least one user message required', { status: 400 });
+    }
+
+    // Create completion request
+    const completion = await openai.chat.completions.create({
+      model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+      messages,
+    });
+
+    if (!('choices' in completion)) {
+      console.error('Unexpected model response:', completion);
+      return new NextResponse('Unexpected model response format', { status: 502 });
+    }
+
+    const reply = completion.choices[0]?.message?.content ?? '[No response]';
+
+    return new Response(reply, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    });
+  } catch (err) {
+    console.error('❌ Route error:', err);
+    return new NextResponse(`Internal error: ${formatError(err)}`, { status: 500 });
+  }
+}
+
+export async function GET(): Promise<Response> {
+  return new Response('Use POST to chat.', { status: 405 });
 }
