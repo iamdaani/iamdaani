@@ -5,8 +5,8 @@ export const config = {
   runtime: 'edge',
 };
 
-// Create custom fetch adapter with correct types
-const customFetch: typeof fetch = async (input, init) => {
+// Create custom fetch adapter for edge runtime
+const customFetch = async (input: string | Request | URL, init?: RequestInit): Promise<Response> => {
   return fetch(input, init);
 };
 
@@ -27,6 +27,15 @@ function errorResponse(message: string, status: number = 400): Response {
     headers: { 'Content-Type': 'application/json' },
   });
 }
+
+// Transform OpenAI tool calls to Vercel format
+const transformToolCall = (toolCall: any) => ({
+  toolCall: {
+    toolCallId: `call_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+    toolName: toolCall.function.name,
+    args: JSON.parse(toolCall.function.arguments),
+  }
+});
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
@@ -71,16 +80,26 @@ export async function POST(req: NextRequest): Promise<Response> {
               const content = chunk.choices[0]?.delta?.content || '';
               const toolCalls = chunk.choices[0]?.delta?.tool_calls;
               
+              // Handle text content
               if (content) {
-                controller.enqueue(encoder.encode(content));
+                const data = JSON.stringify({ text: content });
+                controller.enqueue(encoder.encode(`data: ${data}\n\n`));
               }
               
-              if (toolCalls) {
-                controller.enqueue(encoder.encode(
-                  `\n<function>${JSON.stringify(toolCalls)}</function>`
-                ));
+              // Handle tool calls
+              if (toolCalls && toolCalls.length > 0) {
+                for (const toolCall of toolCalls) {
+                  if (toolCall.function) {
+                    const toolData = transformToolCall(toolCall);
+                    const data = JSON.stringify(toolData);
+                    controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+                  }
+                }
               }
             }
+            
+            // Send completion signal
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
             controller.close();
           }
         });
@@ -88,7 +107,8 @@ export async function POST(req: NextRequest): Promise<Response> {
         return new Response(readableStream, {
           headers: { 
             'Content-Type': 'text/event-stream',
-            'X-Stream-Type': 'openrouter'
+            'Connection': 'keep-alive',
+            'Cache-Control': 'no-cache, no-transform',
           },
         });
         
