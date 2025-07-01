@@ -1,4 +1,5 @@
 'use client';
+import { useChat } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -112,7 +113,7 @@ const MOTION_CONFIG = {
   exit: { opacity: 0, y: 20 },
   transition: {
     duration: 0.3,
-    ease: [0.4, 0, 0.2, 1] as const, // cubic-bezier for easeOut
+    ease: [0, 0, 0.2, 1] as const, // cubic-bezier for easeOut
   },
 };
 
@@ -123,14 +124,21 @@ const Chat = () => {
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Custom hook to handle chat functionality
-  const handleChat = {
-    onResponse: (response: Response) => {
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    stop,
+    setMessages,
+    setInput,
+    reload,
+    addToolResult,
+    append,
+  } = useChat({
+    onResponse: (response) => {
       if (response) {
         setLoadingSubmit(false);
         setIsTalking(true);
@@ -148,7 +156,7 @@ const Chat = () => {
         videoRef.current.pause();
       }
     },
-    onError: (error: any) => {
+    onError: (error) => {
       setLoadingSubmit(false);
       setIsTalking(false);
       if (videoRef.current) {
@@ -157,11 +165,11 @@ const Chat = () => {
       console.error('Chat error:', error.message, error.cause);
       toast.error(`Error: ${error.message}`);
     },
-    onToolCall: (tool: any) => {
+    onToolCall: (tool) => {
       const toolName = tool.toolCall.toolName;
       console.log('Tool call:', toolName);
     },
-  };
+  });
 
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
     const latestAIMessageIndex = messages.findLastIndex(
@@ -181,7 +189,11 @@ const Chat = () => {
 
     if (result.currentAIMessage) {
       result.hasActiveTool =
-        result.currentAIMessage.content?.includes('<function>') || false;
+        result.currentAIMessage.parts?.some(
+          (part) =>
+            part.type === 'tool-invocation' &&
+            part.toolInvocation?.state === 'result'
+        ) || false;
     }
 
     if (latestAIMessageIndex < latestUserMessageIndex) {
@@ -192,76 +204,23 @@ const Chat = () => {
   }, [messages]);
 
   const isToolInProgress = messages.some(
-    (m) => m.role === 'assistant' && m.content?.includes('<function>')
+    (m) =>
+      m.role === 'assistant' &&
+      m.parts?.some(
+        (part) =>
+          part.type === 'tool-invocation' &&
+          part.toolInvocation?.state !== 'result'
+      )
   );
 
   //@ts-ignore
-  const submitQuery = async (query) => {
+  const submitQuery = (query) => {
     if (!query.trim() || isToolInProgress) return;
     setLoadingSubmit(true);
-    
-    // Create new messages array
-    const userMessage = { role: 'user', content: query };
-    const newMessages = [...messages, userMessage];
-    setMessages([...newMessages, { role: 'assistant', content: '' }]);
-    
-    try {
-      setIsLoading(true);
-      abortControllerRef.current = new AbortController();
-      
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        body: JSON.stringify({
-          messages: newMessages,
-          stream: true
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        signal: abortControllerRef.current.signal
-      });
-
-      if (!response.body) throw new Error('No response body');
-      
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const textChunk = decoder.decode(value, { stream: true });
-        fullResponse += textChunk;
-        
-        // Update last assistant message
-        setMessages(prev => {
-          const last = prev[prev.length - 1];
-          if (last.role === 'assistant') {
-            return [
-              ...prev.slice(0, -1),
-              { ...last, content: fullResponse }
-            ];
-          }
-          return prev;
-        });
-      }
-      
-      handleChat.onFinish();
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('Request aborted');
-      } else {
-        console.error('Error:', error);
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'Sorry, something went wrong. Please try again.' 
-        }]);
-        handleChat.onError(error);
-      }
-    } finally {
-      setIsLoading(false);
-      setLoadingSubmit(false);
-      abortControllerRef.current = null;
-    }
+    append({
+      role: 'user',
+      content: query,
+    });
   };
 
   useEffect(() => {
@@ -300,12 +259,9 @@ const Chat = () => {
   };
 
   const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    stop();
     setLoadingSubmit(false);
     setIsTalking(false);
-    setIsLoading(false);
     if (videoRef.current) {
       videoRef.current.pause();
     }
@@ -405,8 +361,8 @@ const Chat = () => {
                 <SimplifiedChatView
                   message={currentAIMessage}
                   isLoading={isLoading}
-                  reload={() => submitQuery(latestUserMessage?.content || '').then(() => null)}
-                  addToolResult={() => {}}
+                  reload={reload}
+                  addToolResult={addToolResult}
                 />
               </div>
             ) : (
@@ -431,7 +387,7 @@ const Chat = () => {
             <HelperBoost submitQuery={submitQuery} setInput={setInput} />
             <ChatBottombar
               input={input}
-              handleInputChange={(e) => setInput(e.target.value)}
+              handleInputChange={handleInputChange}
               handleSubmit={onSubmit}
               isLoading={isLoading}
               stop={handleStop}
