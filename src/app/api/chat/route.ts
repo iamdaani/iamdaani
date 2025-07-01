@@ -1,5 +1,6 @@
 // src/app/api/chat/route.ts
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
 import { SYSTEM_PROMPT } from './prompt';
 
 export const config = {
@@ -7,63 +8,66 @@ export const config = {
   maxDuration: 45,
 };
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const API_KEY = process.env.OPENROUTER_API_KEY!;
+// Initialize OpenAI client to talk to OpenRouter
+const client = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY!,
+  baseURL: 'https://openrouter.ai/api/v1',
+});
 
-export async function POST(req: NextRequest): Promise<Response> {
-  let body;
+export async function POST(req: NextRequest) {
+  let body: any;
   try {
     body = await req.json();
   } catch {
-    return new Response('Invalid JSON', { status: 400 });
+    return new NextResponse('Invalid JSON', { status: 400 });
   }
 
   const { messages } = body;
   if (!Array.isArray(messages)) {
-    return new Response('`messages` must be an array', { status: 400 });
+    return new NextResponse('`messages` must be an array', { status: 400 });
   }
 
-  // Build payload without any functions or streaming
+  // Build payload for OpenRouter
   const payload = {
-    model: 'mistralai/mistral-small-3.2-24b-instruct-2506',
+    model: 'mistralai/mistral-small-3.2-24b-instruct:free',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       ...messages,
     ],
-    stream: false
+    // you can pass extra headers or body if desired:
+    extra_headers: {
+      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || '',
+      'X-Title': process.env.NEXT_PUBLIC_SITE_NAME || '',
+    },
+    extra_body: {},
+    stream: false, // non‑streaming for now
   };
 
-  // Send to OpenRouter
-  const resp = await fetch(OPENROUTER_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    console.error(`Model error ${resp.status}:`, text);
-    return new Response(`Model error: ${resp.status}`, { status: 502 });
+  try {
+    const completion = await client.chat.completions.create(payload);
+    if ('choices' in completion && Array.isArray(completion.choices)) {
+      const reply = completion.choices[0]?.message?.content;
+      if (typeof reply !== 'string') {
+        console.error('Unexpected response format', completion);
+        return new NextResponse('Invalid response format', { status: 502 });
+      }
+      return new NextResponse(reply, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    } else {
+      console.error('Unexpected response type', completion);
+      return new NextResponse('Invalid response type', { status: 502 });
+    }
+  } catch (e: any) {
+    console.error('OpenRouter error:', e);
+    const msg = e?.response?.status
+      ? `Model error ${e.response.status}: ${e.response.body}`
+      : e.message || 'Unknown error';
+    return new NextResponse(msg, { status: 502 });
   }
-
-  // Parse the non‑streaming JSON response
-  const data = await resp.json();
-  const reply = data.choices?.[0]?.message?.content;
-  if (typeof reply !== 'string') {
-    console.error('Unexpected response format', data);
-    return new Response('Invalid response format', { status: 502 });
-  }
-
-  // Return plain-text chat reply
-  return new Response(reply, {
-    status: 200,
-    headers: { 'Content-Type': 'text/plain' },
-  });
 }
 
-export async function GET(): Promise<Response> {
-  return new Response('Use POST to chat.', { status: 405 });
+export async function GET() {
+  return new NextResponse('Use POST to chat.', { status: 405 });
 }
