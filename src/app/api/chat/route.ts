@@ -16,62 +16,66 @@ const openai = new OpenAI({
   },
 });
 
-function formatError(e: unknown) {
+function formatError(e: unknown): string {
   if (typeof e === 'string') return e;
   if (e instanceof Error) return e.message;
   try { return JSON.stringify(e); } catch { return String(e); }
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  let body: any;
   try {
-    body = await req.json();
-  } catch {
-    return new NextResponse('Invalid JSON', { status: 400 });
-  }
+    const body = await req.json();
+    
+    // Validate request body
+    if (!Array.isArray(body?.messages)) {
+      return new NextResponse('`messages` must be an array', { status: 400 });
+    }
 
-  let { messages } = body;
-  if (!Array.isArray(messages)) {
-    return new NextResponse('`messages` must be an array', { status: 400 });
-  }
+    const hasUser = body.messages.some((m: any) => m.role === 'user');
+    if (!hasUser) {
+      return new NextResponse('At least one user message is required', { status: 400 });
+    }
 
-  const hasUser = messages.some((m: any) => m.role === 'user');
-  if (!hasUser) {
-    return new NextResponse('At least one user message is required', { status: 400 });
-  }
+    // Prepare the payload
+    const payload = {
+      model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+      messages: body.messages.map((m: any) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      stream: false, // Explicitly set to false
+    };
 
-  // Align payload to OpenRouter's expected type structure
-  const payload: any = {
-    model: 'mistralai/mistral-small-3.2-24b-instruct:free',
-    messages: messages.map((m: any) => ({
-      role: m.role,
-      content: typeof m.content === 'string' ? m.content : m.content,
-    })),
-    stream: false,
-  };
-
-  console.log('➡️ Sending payload:', JSON.stringify(payload, null, 2));
-
-  try {
+    // Make the API call
     const completion = await openai.chat.completions.create(payload);
 
-    if (!('choices' in completion)) {
-      console.error('⛔️ Unexpected format:', completion);
+    // Check if completion is a stream (has no 'choices' property)
+    if (!('choices' in completion) || !completion.choices?.[0]?.message?.content) {
+      console.error('Unexpected response format:', completion);
       return new NextResponse('Unexpected model response format', { status: 502 });
     }
 
-    const reply = completion.choices[0]?.message?.content ?? '[No response]';
-    return new NextResponse(reply, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain',
-      },
+    // Return the response
+    return NextResponse.json({
+      content: completion.choices[0].message.content
     });
+
   } catch (err: any) {
-    console.error('❌ OpenRouter error status', err.response?.status, formatError(err.response?.body ?? err));
-    const status = err.response?.status || 500;
-    const message = err.response?.body?.error?.message || err.message || 'Unknown error';
-    return new NextResponse(`Model error ${status}: ${message}`, { status });
+    console.error('OpenRouter error:', formatError(err));
+    
+    // Handle OpenAI API errors
+    if (err instanceof OpenAI.APIError) {
+      return NextResponse.json(
+        { error: err.message },
+        { status: err.status || 500 }
+      );
+    }
+    
+    // Handle other errors
+    return NextResponse.json(
+      { error: formatError(err) },
+      { status: 500 }
+    );
   }
 }
 
