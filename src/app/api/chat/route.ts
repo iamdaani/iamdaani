@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { streamText, StreamTextResult } from 'ai'; // Import StreamTextResult type
-import { toAIStream } from 'ai/streams'; // Add this import
+import { streamText } from 'ai'; // Only import streamText
 
 export const config = {
   runtime: 'edge',
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           messages: cleanedMessages,
         });
 
-        // Convert to AI stream response
+        // Convert to AI stream response - no additional imports needed
         return result.toDataStreamResponse();
         
       } catch (error) {
