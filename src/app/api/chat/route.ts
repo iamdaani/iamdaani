@@ -49,6 +49,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const completion = await openai.chat.completions.create({
       model: 'mistralai/mistral-small-3.2-24b-instruct:free',
       messages,
+      stream: false, // ← important!
     });
 
     if (!('choices' in completion)) {
