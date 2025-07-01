@@ -8,7 +8,7 @@ export const config = {
   maxDuration: 45,
 };
 
-// Initialize OpenAI client to talk to OpenRouter
+// Point official OpenAI client at OpenRouter
 const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY!,
   baseURL: 'https://openrouter.ai/api/v1',
@@ -22,49 +22,53 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Invalid JSON', { status: 400 });
   }
 
-  const { messages } = body;
+  let { messages } = body;
   if (!Array.isArray(messages)) {
     return new NextResponse('`messages` must be an array', { status: 400 });
   }
 
-  // Build payload for OpenRouter
+  // Flatten content to string and log payload
+  messages = messages.map((m: any) => {
+    let contentStr: string;
+    if (typeof m.content === 'string') {
+      contentStr = m.content;
+    } else if (typeof m.content === 'object') {
+      // turn arrays or objects into JSON text
+      contentStr = JSON.stringify(m.content);
+      console.warn(`⚠️ Converted non‑string content to JSON string:`, m.content);
+    } else {
+      contentStr = String(m.content);
+    }
+    return { role: m.role, content: contentStr };
+  });
   const payload = {
-    model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+    model: 'mistralai/mistral-small-3.2-24b-instruct-2506',  // try this ID
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       ...messages,
     ],
-    // you can pass extra headers or body if desired:
-    extra_headers: {
-      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || '',
-      'X-Title': process.env.NEXT_PUBLIC_SITE_NAME || '',
-    },
-    extra_body: {},
-    stream: false, // non‑streaming for now
+    stream: false,  // non-streaming for now
   };
+  console.log('🔔 Sending payload to OpenRouter:', JSON.stringify(payload, null, 2));
 
   try {
     const completion = await client.chat.completions.create(payload);
-    if ('choices' in completion && Array.isArray(completion.choices)) {
-      const reply = completion.choices[0]?.message?.content;
-      if (typeof reply !== 'string') {
-        console.error('Unexpected response format', completion);
-        return new NextResponse('Invalid response format', { status: 502 });
-      }
-      return new NextResponse(reply, {
-        status: 200,
-        headers: { 'Content-Type': 'text/plain' },
-      });
-    } else {
-      console.error('Unexpected response type', completion);
-      return new NextResponse('Invalid response type', { status: 502 });
+    // Ensure completion is not a stream
+    if (!('choices' in completion)) {
+      console.error('Unexpected response format (no choices property)', completion);
+      return new NextResponse('Invalid response format', { status: 502 });
     }
+    const reply = completion.choices[0]?.message?.content;
+    if (typeof reply !== 'string') {
+      console.error('Unexpected response format', completion);
+      return new NextResponse('Invalid response format', { status: 502 });
+    }
+    return new NextResponse(reply, { status: 200, headers: { 'Content-Type': 'text/plain' } });
   } catch (e: any) {
     console.error('OpenRouter error:', e);
-    const msg = e?.response?.status
-      ? `Model error ${e.response.status}: ${e.response.body}`
-      : e.message || 'Unknown error';
-    return new NextResponse(msg, { status: 502 });
+    const status = e.response?.status || 500;
+    const text = e.response?.body || e.message || 'Unknown error';
+    return new NextResponse(`Model error ${status}: ${text}`, { status });
   }
 }
 
