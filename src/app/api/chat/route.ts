@@ -16,69 +16,74 @@ const openai = new OpenAI({
   },
 });
 
-function formatError(e: unknown): string {
-  if (typeof e === 'string') return e;
-  if (e instanceof Error) return e.message;
-  try { return JSON.stringify(e); } catch { return String(e); }
-}
-
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const body = await req.json();
+    // Parse and validate request
+    const { messages } = await req.json();
     
-    // Validate request body
-    if (!Array.isArray(body?.messages)) {
-      return new NextResponse('`messages` must be an array', { status: 400 });
+    if (!Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: 'Messages must be an array' },
+        { status: 400 }
+      );
     }
 
-    const hasUser = body.messages.some((m: any) => m.role === 'user');
-    if (!hasUser) {
-      return new NextResponse('At least one user message is required', { status: 400 });
+    if (!messages.some((m: any) => m.role === 'user')) {
+      return NextResponse.json(
+        { error: 'At least one user message is required' },
+        { status: 400 }
+      );
     }
 
-    // Prepare the payload
-    const payload = {
+    // Create completion without streaming
+    const completion = await openai.chat.completions.create({
       model: 'mistralai/mistral-small-3.2-24b-instruct:free',
-      messages: body.messages.map((m: any) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      stream: false, // Explicitly set to false
-    };
-
-    // Make the API call
-    const completion = await openai.chat.completions.create(payload);
-
-    // Check if completion is a stream (has no 'choices' property)
-    if (!('choices' in completion) || !completion.choices?.[0]?.message?.content) {
-      console.error('Unexpected response format:', completion);
-      return new NextResponse('Unexpected model response format', { status: 502 });
-    }
-
-    // Return the response
-    return NextResponse.json({
-      content: completion.choices[0].message.content
+      messages: messages.map(({ role, content }) => ({ role, content })),
+      stream: false, // Explicitly disable streaming
     });
 
-  } catch (err: any) {
-    console.error('OpenRouter error:', formatError(err));
-    
-    // Handle OpenAI API errors
-    if (err instanceof OpenAI.APIError) {
+    // Extract and validate response
+    const responseContent = completion.choices[0]?.message?.content;
+    if (!responseContent) {
+      console.error('Invalid response format:', completion);
       return NextResponse.json(
-        { error: err.message },
-        { status: err.status || 500 }
+        { error: 'Invalid response from model' },
+        { status: 502 }
+      );
+    }
+
+    // Return properly formatted JSON response
+    return NextResponse.json({
+      success: true,
+      message: responseContent
+    });
+
+  } catch (error: any) {
+    console.error('API Error:', error);
+    
+    // Handle OpenAI-specific errors
+    if (error instanceof OpenAI.APIError) {
+      return NextResponse.json(
+        { 
+          error: error.message,
+          status: error.status,
+          code: error.code
+        },
+        { status: error.status || 500 }
       );
     }
     
-    // Handle other errors
+    // Handle generic errors
     return NextResponse.json(
-      { error: formatError(err) },
+      { error: error?.message || 'Unknown error occurred' },
       { status: 500 }
     );
   }
 }
 
 export async function GET(): Promise<Response> {
-  return new NextResponse('Use POST to chat.', { status: 405 });
+  return NextResponse.json(
+    { error: 'Use POST method to chat' },
+    { status: 405 }
+  );
 }
