@@ -1,6 +1,7 @@
 // src/app/api/chat/route.ts
 import { NextRequest } from 'next/server';
 import { OpenAI } from 'openai'; // Edge-compatible OpenAI package
+import { useState } from 'react';
 
 export const config = {
   runtime: 'edge',
@@ -138,4 +139,80 @@ export async function POST(req: NextRequest): Promise<Response> {
 
 export async function GET(): Promise<Response> {
   return errorResponse('Method not allowed. Use POST to chat.', 405);
+}
+
+// React component code
+type Message = { role: string; content: string };
+
+const ChatComponent = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  async function sendMessage(userMessage: string) {
+    // ...send user message logic...
+
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        messages: [
+          ...messages,
+          { role: 'user', content: userMessage }
+        ],
+        stream: true
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.body) return;
+
+    let fullResponse = '';
+    let functionBuffer = '';
+
+    const processChunk = (text: string) => {
+      // Check for function call tags
+      const functionStart = text.indexOf('<function>');
+      const functionEnd = text.indexOf('</function>');
+      
+      if (functionStart !== -1 && functionEnd !== -1) {
+        // Extract function JSON
+        const jsonString = text.slice(
+          functionStart + 10, 
+          functionEnd
+        );
+        
+        try {
+          const toolCalls = JSON.parse(jsonString);
+          // Handle function invocation here
+          console.log('Function call detected:', toolCalls);
+        } catch (e) {
+          console.error('Error parsing function call:', e);
+        }
+        
+        // Remove function tags from visible content
+        return text.replace(/<function>.*?<\/function>/, '');
+      }
+      
+      return text;
+    };
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const textChunk = decoder.decode(value);
+      fullResponse += textChunk;
+
+      // Process for function calls
+      const visibleText = processChunk(fullResponse);
+
+      // Update UI with visibleText (append or update last assistant message)
+      setMessages((prev) => [
+        ...prev.filter((m, i) => i !== prev.length - 1),
+        { role: 'assistant', content: visibleText }
+      ]);
+    }
+  }
+
+  // ...rest of your component logic
 }
