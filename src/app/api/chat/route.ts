@@ -60,12 +60,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       return new NextResponse('Unexpected model response format', { status: 502 });
     }
 
-    const reply = completion.choices[0]?.message.content;
-    console.log('✉️ Model reply:', reply);
-
+    const reply = completion.choices[0]?.message?.content ?? '[No response]';
     return new NextResponse(reply, {
       status: 200,
-      headers: { 'Content-Type': 'text/plain' },
+      headers: {
+        'Content-Type': 'text/plain',
+      },
     });
   } catch (err: any) {
     console.error('❌ OpenRouter error status', err.response?.status, formatError(err.response?.body ?? err));
