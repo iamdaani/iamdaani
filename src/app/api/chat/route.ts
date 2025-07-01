@@ -1,14 +1,19 @@
-// src/app/api/chat/route.ts
 import { NextRequest } from 'next/server';
-import OpenAI from 'openai';
+import { OpenAI } from 'openai';
 
 export const config = {
-  runtime: 'edge', // Required for proper streaming support
+  runtime: 'edge',
+};
+
+// Create custom fetch adapter with correct types
+const customFetch: typeof fetch = async (input, init) => {
+  return fetch(input, init);
 };
 
 const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY!,
+  baseURL: 'https://openrouter.ai/api/v1',
+  fetch: customFetch,
   defaultHeaders: {
     'HTTP-Referer': 'https://www.ahmadyar.site/',
     'X-Title': 'Ahmad Yar',
@@ -16,14 +21,14 @@ const openai = new OpenAI({
 });
 
 // Helper function for error responses
-function errorResponse(message: string, status: number = 400) {
+function errorResponse(message: string, status: number = 400): Response {
   return new Response(JSON.stringify({ error: message }), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     // Parse and validate request body
     let body;
@@ -43,7 +48,7 @@ export async function POST(req: NextRequest) {
       return errorResponse('At least one user message is required', 400);
     }
 
-    // Prepare messages (ensure content is string)
+    // Prepare messages
     const cleanedMessages = messages.map(m => ({
       role: m.role,
       content: String(m.content || ''),
@@ -51,31 +56,49 @@ export async function POST(req: NextRequest) {
 
     // Handle streaming request
     if (stream) {
-      const stream = await openai.chat.completions.create({
-        model: 'mistralai/mistral-small-3.2-24b-instruct:free',
-        messages: cleanedMessages,
-        stream: true,
-      });
+      try {
+        const openaiResponse = await openai.chat.completions.create({
+          model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+          messages: cleanedMessages,
+          stream: true,
+        });
 
-      const responseStream = new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder();
-          try {
-            for await (const chunk of stream) {
-              const content = chunk.choices?.[0]?.delta?.content || '';
-              controller.enqueue(encoder.encode(content));
+        const encoder = new TextEncoder();
+        
+        const readableStream = new ReadableStream({
+          async start(controller) {
+            for await (const chunk of openaiResponse) {
+              const content = chunk.choices[0]?.delta?.content || '';
+              const toolCalls = chunk.choices[0]?.delta?.tool_calls;
+              
+              if (content) {
+                controller.enqueue(encoder.encode(content));
+              }
+              
+              if (toolCalls) {
+                controller.enqueue(encoder.encode(
+                  `\n<function>${JSON.stringify(toolCalls)}</function>`
+                ));
+              }
             }
-          } catch (e) {
-            console.error('Stream error:', e);
-          } finally {
             controller.close();
           }
-        },
-      });
+        });
 
-      return new Response(responseStream, {
-        headers: { 'Content-Type': 'text/event-stream' },
-      });
+        return new Response(readableStream, {
+          headers: { 
+            'Content-Type': 'text/event-stream',
+            'X-Stream-Type': 'openrouter'
+          },
+        });
+        
+      } catch (error: any) {
+        console.error('Streaming Error:', error);
+        return errorResponse(
+          `Streaming failed: ${error.message || 'Unknown error'}`,
+          500
+        );
+      }
     }
 
     // Handle non-streaming request
@@ -85,14 +108,14 @@ export async function POST(req: NextRequest) {
       stream: false,
     });
 
-    // Validate response structure
-    if (!completion?.choices?.[0]?.message?.content) {
-      console.error('Invalid response structure:', completion);
-      return errorResponse('Invalid response from AI provider', 502);
-    }
-
+    const content = completion.choices[0]?.message?.content || '';
+    
     return new Response(JSON.stringify({
-      content: completion.choices[0].message.content
+      id: `chatcmpl-${Date.now()}`,
+      role: 'assistant',
+      content,
+      model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+      usage: completion.usage,
     }), {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -100,18 +123,21 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('API Error:', error);
     
-    // Handle OpenAI-specific errors
+    // Handle OpenAI errors
     if (error instanceof OpenAI.APIError) {
       return errorResponse(
-        `AI service error: ${error.message}`,
+        `OpenRouter Error: ${error.message}`,
         error.status || 500
       );
     }
     
-    // Handle generic errors
     return errorResponse(
-      error?.message || 'Internal server error',
+      error.message || 'Internal server error',
       500
     );
   }
+}
+
+export async function GET(): Promise<Response> {
+  return errorResponse('Method not allowed. Use POST to chat.', 405);
 }
