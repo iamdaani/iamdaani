@@ -1,10 +1,9 @@
 // src/app/api/chat/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 
 export const config = {
-  runtime: 'nodejs',
-  maxDuration: 45,
+  runtime: 'edge',
 };
 
 const openai = new OpenAI({
@@ -16,74 +15,68 @@ const openai = new OpenAI({
   },
 });
 
-export async function POST(req: NextRequest): Promise<Response> {
+export async function POST(req: NextRequest) {
   try {
-    // Parse and validate request
-    const { messages } = await req.json();
+    const { messages, stream: clientWantsStream = false } = await req.json();
     
+    // Validation
     if (!Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: 'Messages must be an array' },
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'Messages must be an array' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    if (!messages.some((m: any) => m.role === 'user')) {
-      return NextResponse.json(
-        { error: 'At least one user message is required' },
-        { status: 400 }
-      );
+    if (!messages.some(m => m.role === 'user')) {
+      return new Response(JSON.stringify({ error: 'At least one user message is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    // Create completion without streaming
+    // Handle streaming request
+    if (clientWantsStream) {
+      const stream = await openai.chat.completions.create({
+        model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+        messages,
+        stream: true,
+      });
+
+      const responseStream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          for await (const chunk of stream) {
+            controller.enqueue(encoder.encode(chunk.choices[0]?.delta?.content || ''));
+          }
+          controller.close();
+        },
+      });
+
+      return new Response(responseStream, {
+        headers: { 'Content-Type': 'text/event-stream' },
+      });
+    }
+
+    // Handle non-streaming request
     const completion = await openai.chat.completions.create({
       model: 'mistralai/mistral-small-3.2-24b-instruct:free',
-      messages: messages.map(({ role, content }) => ({ role, content })),
-      stream: false, // Explicitly disable streaming
+      messages,
+      stream: false,
     });
 
-    // Extract and validate response
-    const responseContent = completion.choices[0]?.message?.content;
-    if (!responseContent) {
-      console.error('Invalid response format:', completion);
-      return NextResponse.json(
-        { error: 'Invalid response from model' },
-        { status: 502 }
-      );
-    }
-
-    // Return properly formatted JSON response
-    return NextResponse.json({
-      success: true,
-      message: responseContent
+    return new Response(JSON.stringify({
+      content: completion.choices[0]?.message?.content || ''
+    }), {
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error: any) {
     console.error('API Error:', error);
-    
-    // Handle OpenAI-specific errors
-    if (error instanceof OpenAI.APIError) {
-      return NextResponse.json(
-        { 
-          error: error.message,
-          status: error.status,
-          code: error.code
-        },
-        { status: error.status || 500 }
-      );
-    }
-    
-    // Handle generic errors
-    return NextResponse.json(
-      { error: error?.message || 'Unknown error occurred' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({
+      error: error.message || 'Unknown error occurred'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-}
-
-export async function GET(): Promise<Response> {
-  return NextResponse.json(
-    { error: 'Use POST method to chat' },
-    { status: 405 }
-  );
 }
