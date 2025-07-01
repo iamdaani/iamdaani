@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { streamText } from 'ai'; // Add this import
+import { streamText, StreamTextResult } from 'ai'; // Import StreamTextResult type
+import { toAIStream } from 'ai/streams'; // Add this import
 
 export const config = {
   runtime: 'edge',
@@ -56,12 +57,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     
     // Handle streaming request
     if (stream) {
-      const result = await streamText({
-        model,
-        messages: cleanedMessages,
-      });
+      try {
+        const result = await streamText({
+          model,
+          messages: cleanedMessages,
+        });
 
-      return result.toDataStreamResponse();
+        // Convert to AI stream response
+        return result.toDataStreamResponse();
+        
+      } catch (error) {
+        console.error('Streaming error:', error);
+        return errorResponse('Error processing stream', 500);
+      }
     } 
 
     // Handle non-streaming request

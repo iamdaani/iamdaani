@@ -1,5 +1,5 @@
 'use client';
-import { useChat } from '@ai-sdk/react';
+import { useChat } from 'ai/react'; // <-- Updated import
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -138,6 +138,7 @@ const Chat = () => {
     addToolResult,
     append,
   } = useChat({
+    api: '/api/chat', // Point to your API route
     onResponse: (response) => {
       if (response) {
         setLoadingSubmit(false);
