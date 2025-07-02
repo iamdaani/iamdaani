@@ -59,16 +59,10 @@ export async function POST(req: NextRequest) {
       tools: toolRegistry,
       toolCallStreaming: true,
       maxSteps: 2,
+      // If you need to handle function calls, refer to the ai SDK documentation for the correct approach.
     });
 
-    if (stream) {
-      return result.toDataStreamResponse({
-        getErrorMessage,
-      });
-    } else {
-      const text = await result.text;
-      return NextResponse.json({ content: text });
-    }
+    return result.toDataStreamResponse({ getErrorMessage });
   } catch (err) {
     console.error('StreamText error:', err);
     return errorJSON(getErrorMessage(err), 500);
