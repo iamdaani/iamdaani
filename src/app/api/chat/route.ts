@@ -5,6 +5,7 @@ import { streamText } from 'ai';
 export const config = {
   runtime: 'edge',
 };
+
 export const dynamic = 'force-dynamic';
 
 const openrouter = createOpenAICompatible({
@@ -30,49 +31,78 @@ export async function POST(req: NextRequest) {
   let body;
   try {
     body = await req.json();
-    console.log('🔍 Parsed JSON:', body.stream);
+    console.log('🔍 Parsed JSON stream flag:', body?.stream);
   } catch (e) {
-    console.error('❌ JSON parse failed', e);
+    console.error('❌ JSON parse failed:', e);
     return errorResponse('Invalid JSON payload', 400);
   }
 
-  const { messages, stream = false } = body;
+  const { messages, stream = false } = body || {};
 
-  const cleanedMessages = messages.map((m: { role?: string; content?: unknown }) => ({
-    role: m.role,
-    content: String(m.content || ''),
+  if (!Array.isArray(messages)) {
+    return errorResponse('Invalid or missing "messages" array', 400);
+  }
+
+  const cleanedMessages = messages.map((m: any) => ({
+    role: m?.role || 'user',
+    content: String(m?.content || ''),
   }));
 
   const model = openrouter('mistralai/mistral-small-3.2-24b-instruct:free');
 
   if (!stream) {
-    console.log('🟢 non-stream branch entered');
+    console.log('🟢 Entered non-stream path');
     try {
-      console.log('⏳ Calling streamText…');
       const result = await streamText({ model, messages: cleanedMessages });
-      console.log('✅ streamText returned');
+      console.log('✅ streamText() returned');
 
-      console.log('⏳ Awaiting first chunk from fullStream…');
-      const iterator = result.fullStream?.[Symbol.asyncIterator]();
-      const { value } = await iterator.next();
-      const text = value?.text || 'No content';
-      console.log('✅ Got first chunk text:', text);
+      let text = 'No content';
+
+      try {
+        console.log('⏳ Trying fullStream()...');
+        const fullStream = result.fullStream;
+
+        if (fullStream && Symbol.asyncIterator in fullStream) {
+          const iterator = fullStream[Symbol.asyncIterator]();
+          const { value } = await iterator.next();
+
+          if (value?.text?.trim()) {
+            text = value.text;
+            console.log('✅ Got first chunk text:', text);
+          } else {
+            console.warn('⚠️ First chunk is empty, falling back to .text');
+            text = await result.text;
+          }
+        } else {
+          console.warn('⚠️ fullStream not async iterable, using .text');
+          text = await result.text;
+        }
+      } catch (streamErr) {
+        console.error('❌ Error during fullStream fallback:', streamErr);
+        text = await result.text;
+      }
 
       return new Response(JSON.stringify({ content: text }), {
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (e) {
-      console.error('❌ Non-stream error:', e);
-      return errorResponse('Error in non-stream path', 500);
+    } catch (err) {
+      console.error('❌ Non-stream path failure:', err);
+      return errorResponse('Server error in non-stream mode', 500);
     }
   }
 
+  // Streaming path
   try {
     const result = await streamText({ model, messages: cleanedMessages });
-    return result.toDataStreamResponse();
-  } catch (error) {
-    console.error('Streaming error:', error);
-    return errorResponse('Error processing stream', 500);
+    if (typeof result.toDataStreamResponse === 'function') {
+      return result.toDataStreamResponse();
+    } else {
+      console.error('❌ toDataStreamResponse() not available on result');
+      return errorResponse('Streaming not supported by result', 500);
+    }
+  } catch (err) {
+    console.error('❌ Streaming path failure:', err);
+    return errorResponse('Server error in stream mode', 500);
   }
 }
 
