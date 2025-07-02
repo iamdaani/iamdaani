@@ -15,10 +15,18 @@ import {
   ChatBubble,
   ChatBubbleMessage,
 } from '@/components/ui/chat/chat-bubble';
+import GitHubButton from 'react-github-btn'
 import WelcomeModal from '@/components/welcome-modal';
 import HelperBoost from './HelperBoost';
 import { Info } from 'lucide-react';
-import GitHubButton from 'react-github-btn';
+import { getProjects } from '../../app/api/chat/tools/getProjects';
+import { getPresentation } from '../../app/api/chat/tools/getPresentation';
+import { getResume } from '../../app/api/chat/tools/getResume';
+import { getContact } from '../../app/api/chat/tools/getContact';
+import { getSkills } from '../../app/api/chat/tools/getSkills';
+import { getSports } from '../../app/api/chat/tools/getSport';
+import { getCrazy } from '../../app/api/chat/tools/getCrazy';
+import { getInternship } from '../../app/api/chat/tools/getIntership';
 
 // ──────────────────────────────────────────────
 // 💡 ClientOnly component to avoid hydration mismatch
@@ -134,8 +142,65 @@ const Chat = () => {
       console.error('Chat error:', err);
       toast.error(`Error: ${err.message}`);
     },
-    onToolCall: (tool) => {
-      console.log('Tool call:', tool.toolCall.toolName);
+    onToolCall: async (toolCall) => {
+      try {
+        const { toolCallId, toolName, args } = toolCall.toolCall;
+
+        // Validate tool
+        if (!toolName || typeof toolName !== 'string') {
+          console.warn('Invalid tool name in tool call:', toolCall);
+          return;
+        }
+
+        // Make sure your backend tool registry matches this map
+        const toolMap = {
+          getProjects,
+          getPresentation,
+          getResume,
+          getContact,
+          getSkills,
+          getSports,
+          getCrazy,
+          getInternship,
+        };
+
+        type ToolMapKey = keyof typeof toolMap;
+
+        const toolFn = toolMap[toolName as ToolMapKey];
+        if (!toolFn) {
+          console.warn(`Tool not found: ${toolName}`);
+          return;
+        }
+
+        // Execute tool with parsed args
+        // Filter messages to only include valid roles
+        const coreMessages = messages
+          .filter((m) => m.role === 'system' || m.role === 'user' || m.role === 'assistant')
+          .map((m) => {
+            // Remove any extra properties or roles not expected by CoreMessage
+            if (m.role === 'system' || m.role === 'user' || m.role === 'assistant') {
+              // Only include the properties expected by CoreMessage
+              const { role, content, parts } = m;
+              return { role, content, parts };
+            }
+            return null;
+          })
+          .filter(Boolean) as any; // Cast as any to satisfy type, or use a proper type assertion if available
+
+        const result = await toolFn.execute(
+          args ?? {},
+          {
+            toolCallId,
+            messages: coreMessages,
+          }
+        );
+        
+        // Send result back to chat stream
+        addToolResult({ toolCallId, result });
+      } catch (err) {
+        console.error('Error in onToolCall handler:', err);
+        toast.error('Tool execution failed.');
+      }
     },
   });
 
@@ -219,7 +284,7 @@ const Chat = () => {
         />
         <div className="pt-2">
           <GitHubButton
-            href="https://github.com/toukoum/portfolio"
+            href="https://github.com/ahamdjin"
             data-size="large"
             data-show-count="true"
             aria-label="Star portfolio on GitHub"
