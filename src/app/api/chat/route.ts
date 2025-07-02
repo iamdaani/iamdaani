@@ -1,4 +1,3 @@
-// src/app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { groq } from '@ai-sdk/groq';
 import { streamText } from 'ai';
@@ -10,77 +9,74 @@ export const config = {
   dynamic: 'force-dynamic',
 };
 
-function errorJSON(msg: string, status = 400) {
-  return new NextResponse(JSON.stringify({ error: msg }), {
+// Simple error response
+function errorJSON(message: string, status = 400) {
+  return new NextResponse(JSON.stringify({ error: message }), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
 }
 
+// Optional: friendly error extractor
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Unknown error';
+}
+
 export async function POST(req: NextRequest) {
-  let payload: any;
+  let body: any;
+
   try {
-    payload = await req.json();
+    body = await req.json();
   } catch {
-    return errorJSON('Invalid JSON payload', 400);
+    return errorJSON('Invalid JSON body', 400);
   }
 
-  let { messages: rawMessages, stream = false } = payload;
+  let { messages: rawMessages, stream = true } = body;
+
   if (!Array.isArray(rawMessages)) {
     return errorJSON('`messages` must be an array', 400);
   }
 
-  // Prepend system prompt
+  // Add system prompt if available
   if (typeof SYSTEM_PROMPT === 'string') {
     rawMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...rawMessages];
   } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
     rawMessages = [SYSTEM_PROMPT, ...rawMessages];
   }
 
-  // Normalize messages
+  // Normalize to required shape
   const messages = rawMessages.map((m: any) => ({
     role: m.role,
     content: String(m.content ?? ''),
   }));
 
-  // Select Groq model
-  const model = groq('mistral-saba-24b');
-
-  // Non-streaming path
-  if (!stream) {
-    try {
-      const result = await streamText({
-        model,
-        messages,
-        tools: toolRegistry,
-      });
-
-      const text = await result.text;
-      return NextResponse.json({ content: text });
-    } catch (err: any) {
-      console.error('Non-stream error:', err);
-      return errorJSON('Error generating completion', 500);
-    }
-  }
-
-  // Streaming path
   try {
     const result = await streamText({
-      model,
+      model: groq('mistral-saba-24b'),
       messages,
       tools: toolRegistry,
+      toolCallStreaming: true,
+      maxSteps: 2,
     });
 
-    // ✅ Correct streaming response for `useChat`
-    return await result.toDataStreamResponse();
-  } catch (err: any) {
-    console.error('Stream error:', err);
-    return errorJSON('Error streaming completion', 500);
+    if (stream) {
+      return result.toDataStreamResponse({
+        getErrorMessage,
+      });
+    } else {
+      const text = await result.text;
+      return NextResponse.json({ content: text });
+    }
+  } catch (err) {
+    console.error('StreamText error:', err);
+    return errorJSON(getErrorMessage(err), 500);
   }
 }
 
 export async function GET() {
-  return new NextResponse('Use POST to chat', {
+  return new NextResponse('Use POST for chat.', {
     status: 405,
     headers: { 'Content-Type': 'text/plain' },
   });

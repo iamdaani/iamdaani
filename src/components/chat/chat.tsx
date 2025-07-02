@@ -1,13 +1,12 @@
 'use client';
+
 import { useChat } from '@ai-sdk/react';
-//import { useChat } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-// Component imports
 import ChatBottombar from '@/components/chat/chat-bottombar';
 import ChatLanding from '@/components/chat/chat-landing';
 import ChatMessageContent from '@/components/chat/chat-message-content';
@@ -17,72 +16,47 @@ import {
   ChatBubbleMessage,
 } from '@/components/ui/chat/chat-bubble';
 import WelcomeModal from '@/components/welcome-modal';
+import HelperBoost from './HelperBoost';
 import { Info } from 'lucide-react';
 import GitHubButton from 'react-github-btn';
-import HelperBoost from './HelperBoost';
 
-// ClientOnly component for client-side rendering
-//@ts-ignore
-const ClientOnly = ({ children }) => {
+// ──────────────────────────────────────────────
+// 💡 ClientOnly component to avoid hydration mismatch
+// ──────────────────────────────────────────────
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
   const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return null;
-  }
-
-  return <>{children}</>;
+  useEffect(() => setHasMounted(true), []);
+  return hasMounted ? <>{children}</> : null;
 };
 
-// Define Avatar component props interface
 interface AvatarProps {
   hasActiveTool: boolean;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isTalking: boolean;
 }
 
-// Dynamic import of Avatar component
+// ──────────────────────────────────────────────
+// 🧠 Dynamically loaded Avatar (video or img)
+// ──────────────────────────────────────────────
 const Avatar = dynamic<AvatarProps>(
   () =>
-    Promise.resolve(({ hasActiveTool, videoRef, isTalking }: AvatarProps) => {
-      // This function will only execute on the client
+    Promise.resolve(({ hasActiveTool, videoRef, isTalking }) => {
       const isIOS = () => {
-        // Multiple detection methods
-        const userAgent = window.navigator.userAgent;
-        const platform = window.navigator.platform;
-        const maxTouchPoints = window.navigator.maxTouchPoints || 0;
-
-        // UserAgent-based check
-        const isIOSByUA =
-          //@ts-ignore
-          /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-
-        // Platform-based check
-        const isIOSByPlatform = /iPad|iPhone|iPod/.test(platform);
-
-        // iPad Pro check
-        const isIPadOS =
-          //@ts-ignore
-          platform === 'MacIntel' && maxTouchPoints > 1 && !window.MSStream;
-
-        // Safari check
-        const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-
-        return isIOSByUA || isIOSByPlatform || isIPadOS || isSafari;
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+        const touchPoints = navigator.maxTouchPoints || 0;
+        return (
+          /iPhone|iPad|iPod/.test(ua) ||
+          /iPhone|iPad|iPod/.test(platform) ||
+          (platform === 'MacIntel' && touchPoints > 1)
+        );
       };
 
-      // Conditional rendering based on detection
       return (
         <div
           className={`flex items-center justify-center rounded-full transition-all duration-300 ${hasActiveTool ? 'h-20 w-20' : 'h-28 w-28'}`}
         >
-          <div
-            className="relative cursor-pointer"
-            onClick={() => (window.location.href = '/')}
-          >
+          <div className="relative cursor-pointer" onClick={() => (window.location.href = '/')}>
             {isIOS() ? (
               <img
                 src="/landing-memojis.png"
@@ -108,20 +82,24 @@ const Avatar = dynamic<AvatarProps>(
   { ssr: false }
 );
 
+// ──────────────────────────────────────────────
+// 🎬 Motion config
+// ──────────────────────────────────────────────
 const MOTION_CONFIG = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: 20 },
-  transition: {
-    duration: 0.3,
-    ease: 'easeOut',
-  },
+  transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
 };
 
+// ──────────────────────────────────────────────
+// 💬 Main Chat Component
+// ──────────────────────────────────────────────
 const Chat = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('query');
+
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
@@ -139,67 +117,44 @@ const Chat = () => {
     addToolResult,
     append,
   } = useChat({
-    onResponse: (response) => {
-      if (response) {
-        setLoadingSubmit(false);
-        setIsTalking(true);
-        if (videoRef.current) {
-          videoRef.current.play().catch((error) => {
-            console.error('Failed to play video:', error);
-          });
-        }
-      }
+    onResponse: () => {
+      setIsTalking(true);
+      setLoadingSubmit(false);
+      videoRef.current?.play().catch((err) => console.warn('Video play failed:', err));
     },
     onFinish: () => {
-      setLoadingSubmit(false);
       setIsTalking(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
+      setLoadingSubmit(false);
+      videoRef.current?.pause();
     },
-    onError: (error) => {
-      setLoadingSubmit(false);
+    onError: (err) => {
       setIsTalking(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-      console.error('Chat error:', error.message, error.cause);
-      toast.error(`Error: ${error.message}`);
+      setLoadingSubmit(false);
+      videoRef.current?.pause();
+      console.error('Chat error:', err);
+      toast.error(`Error: ${err.message}`);
     },
     onToolCall: (tool) => {
-      const toolName = tool.toolCall.toolName;
-      console.log('Tool call:', toolName);
+      console.log('Tool call:', tool.toolCall.toolName);
     },
   });
 
+  // Extract current state
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
-    const latestAIMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'assistant'
-    );
-    const latestUserMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'user'
-    );
+    const aiIndex = messages.findLastIndex((m) => m.role === 'assistant');
+    const userIndex = messages.findLastIndex((m) => m.role === 'user');
 
     const result = {
-      currentAIMessage:
-        latestAIMessageIndex !== -1 ? messages[latestAIMessageIndex] : null,
-      latestUserMessage:
-        latestUserMessageIndex !== -1 ? messages[latestUserMessageIndex] : null,
+      currentAIMessage: aiIndex !== -1 ? messages[aiIndex] : null,
+      latestUserMessage: userIndex !== -1 ? messages[userIndex] : null,
       hasActiveTool: false,
     };
 
-    if (result.currentAIMessage) {
-      result.hasActiveTool =
-        result.currentAIMessage.parts?.some(
-          (part) =>
-            part.type === 'tool-invocation' &&
-            part.toolInvocation?.state === 'result'
-        ) || false;
+    if (result.currentAIMessage?.parts?.some((p: any) => p.type === 'tool-invocation' && p.toolInvocation?.state === 'result')) {
+      result.hasActiveTool = true;
     }
 
-    if (latestAIMessageIndex < latestUserMessageIndex) {
-      result.currentAIMessage = null;
-    }
+    if (aiIndex < userIndex) result.currentAIMessage = null;
 
     return result;
   }, [messages]);
@@ -208,120 +163,96 @@ const Chat = () => {
     (m) =>
       m.role === 'assistant' &&
       m.parts?.some(
-        (part) =>
-          part.type === 'tool-invocation' &&
-          part.toolInvocation?.state !== 'result'
+        (p: any) =>
+          p.type === 'tool-invocation' && p.toolInvocation?.state !== 'result'
       )
   );
 
-  //@ts-ignore
-  const submitQuery = (query) => {
-    if (!query.trim() || isToolInProgress) return;
-    setLoadingSubmit(true);
-    append({
-      role: 'user',
-      content: query,
-    });
-  };
-
+  // 🔁 Initial query from URL (e.g. /chat?query=hello)
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.loop = true;
-      videoRef.current.muted = true;
-      videoRef.current.playsInline = true;
-      videoRef.current.pause();
-    }
-
     if (initialQuery && !autoSubmitted) {
       setAutoSubmitted(true);
       setInput('');
-      submitQuery(initialQuery);
+      append({ role: 'user', content: initialQuery });
+      setLoadingSubmit(true);
     }
   }, [initialQuery, autoSubmitted]);
 
   useEffect(() => {
     if (videoRef.current) {
       if (isTalking) {
-        videoRef.current.play().catch((error) => {
-          console.error('Failed to play video:', error);
-        });
+        videoRef.current.play().catch(() => {});
       } else {
         videoRef.current.pause();
       }
     }
   }, [isTalking]);
 
-  //@ts-ignore
-  const onSubmit = (e) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isToolInProgress) return;
-    submitQuery(input);
+    append({ role: 'user', content: input });
     setInput('');
+    setLoadingSubmit(true);
   };
 
   const handleStop = () => {
     stop();
-    setLoadingSubmit(false);
     setIsTalking(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
+    setLoadingSubmit(false);
+    videoRef.current?.pause();
   };
 
-  // Check if this is the initial empty state (no messages)
-  const isEmptyState =
-    !currentAIMessage && !latestUserMessage && !loadingSubmit;
-
-  // Calculate header height based on hasActiveTool
+  const isEmptyState = !currentAIMessage && !latestUserMessage && !loadingSubmit;
   const headerHeight = hasActiveTool ? 100 : 180;
 
   return (
     <div className="relative h-screen overflow-hidden">
-      <div className="absolute top-6 right-8 z-51 flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
+      {/* Header */}
+      <div className="absolute top-6 right-8 z-50 flex flex-col-reverse items-center gap-1 md:flex-row">
         <WelcomeModal
           trigger={
             <div className="hover:bg-accent cursor-pointer rounded-2xl px-3 py-1.5">
-              <Info className="text-accent-foreground h-8" />
+              <Info className="h-8 text-accent-foreground" />
             </div>
           }
         />
+        <div className="pt-2">
+          <GitHubButton
+            href="https://github.com/toukoum/portfolio"
+            data-size="large"
+            data-show-count="true"
+            aria-label="Star portfolio on GitHub"
+          >
+            Star
+          </GitHubButton>
+        </div>
       </div>
 
-      {/* Fixed Avatar Header with Gradient */}
+      {/* Avatar */}
       <div
-        className="fixed top-0 right-0 left-0 z-50"
+        className="fixed top-0 right-0 left-0 z-40"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%)',
+            'linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0.9), rgba(255,255,255,0))',
         }}
       >
-        <div
-          className={`transition-all duration-300 ease-in-out ${hasActiveTool ? 'pt-6 pb-0' : 'py-6'}`}
-        >
+        <div className={`transition-all ${hasActiveTool ? 'pt-6 pb-0' : 'py-6'}`}>
           <div className="flex justify-center">
             <ClientOnly>
-              <Avatar
-                hasActiveTool={hasActiveTool}
-                videoRef={videoRef}
-                isTalking={isTalking}
-              />
+              <Avatar hasActiveTool={hasActiveTool} videoRef={videoRef} isTalking={isTalking} />
             </ClientOnly>
           </div>
 
+          {/* Display user message while AI is thinking */}
           <AnimatePresence>
             {latestUserMessage && !currentAIMessage && (
-              <motion.div
-                initial={MOTION_CONFIG.initial}
-                animate={MOTION_CONFIG.animate}
-                exit={MOTION_CONFIG.exit}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                className="mx-auto flex max-w-3xl px-4"
-              >
+              <motion.div {...MOTION_CONFIG} className="mx-auto flex max-w-3xl px-4">
                 <ChatBubble variant="sent">
                   <ChatBubbleMessage>
                     <ChatMessageContent
-                      message={latestUserMessage as any}
-                      isLast={true}
+                      message={latestUserMessage}
+                      isLast
                       isLoading={false}
                       reload={() => Promise.resolve(null)}
                     />
@@ -333,29 +264,18 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Chat View */}
       <div className="container mx-auto flex h-full max-w-3xl flex-col">
-        {/* Scrollable Chat Content */}
-        <div
-          className="flex-1 overflow-y-auto px-2"
-          style={{ paddingTop: `${headerHeight}px` }}
-        >
+        <div className="flex-1 overflow-y-auto px-2" style={{ paddingTop: `${headerHeight}px` }}>
           <AnimatePresence mode="wait">
             {isEmptyState ? (
-              <motion.div
-                key="landing"
-                className="flex min-h-full items-center justify-center"
-                initial={MOTION_CONFIG.initial}
-                animate={MOTION_CONFIG.animate}
-                exit={MOTION_CONFIG.exit}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              >
-                <ChatLanding submitQuery={submitQuery} />
+              <motion.div key="landing" className="flex h-full items-center justify-center" {...MOTION_CONFIG}>
+                <ChatLanding submitQuery={(q) => append({ role: 'user', content: q })} />
               </motion.div>
             ) : currentAIMessage ? (
               <div className="pb-4">
                 <SimplifiedChatView
-                  message={currentAIMessage as any}
+                  message={currentAIMessage}
                   isLoading={isLoading}
                   reload={reload}
                   addToolResult={addToolResult}
@@ -363,14 +283,7 @@ const Chat = () => {
               </div>
             ) : (
               loadingSubmit && (
-                <motion.div
-                  key="loading"
-                  initial={MOTION_CONFIG.initial}
-                  animate={MOTION_CONFIG.animate}
-                  exit={MOTION_CONFIG.exit}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="px-4 pt-18"
-                >
+                <motion.div key="loading" {...MOTION_CONFIG} className="px-4 pt-18">
                   <ChatBubble variant="received">
                     <ChatBubbleMessage isLoading />
                   </ChatBubble>
@@ -380,10 +293,10 @@ const Chat = () => {
           </AnimatePresence>
         </div>
 
-        {/* Fixed Bottom Bar */}
+        {/* Footer */}
         <div className="sticky bottom-0 bg-white px-2 pt-3 md:px-0 md:pb-4">
           <div className="relative flex flex-col items-center gap-3">
-            <HelperBoost submitQuery={submitQuery} setInput={setInput} />
+            <HelperBoost submitQuery={(q) => append({ role: 'user', content: q })} setInput={setInput} />
             <ChatBottombar
               input={input}
               handleInputChange={handleInputChange}
@@ -394,14 +307,6 @@ const Chat = () => {
             />
           </div>
         </div>
-        <a
-          href="https://x.com/toukoumcode"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed right-3 bottom-0 z-10 mb-4 hidden cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm hover:underline md:block"
-        >
-          @toukoum
-        </a>
       </div>
     </div>
   );
