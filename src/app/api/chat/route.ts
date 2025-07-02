@@ -1,7 +1,7 @@
 // src/app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { groq } from '@ai-sdk/groq';
-import { streamText, createDataStreamResponse } from 'ai';
+import { streamText, } from 'ai';
 import { toolRegistry } from './tools/tool-registry';
 import { SYSTEM_PROMPT } from './prompt';
 
