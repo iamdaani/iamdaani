@@ -1,66 +1,91 @@
 // src/app/api/chat/route.ts
-import { getContact } from './tools/getContact';
-import { getCrazy } from './tools/getCrazy';
-import { getInternship } from './tools/getIntership';
-import { getPresentation } from './tools/getPresentation';
-import { getProjects } from './tools/getProjects';
-import { getResume } from './tools/getResume';
-import { getSkills } from './tools/getSkills';
-import { getSports } from './tools/getSport';
-// filepath: z:\github\ahmadyar\src\app\api\chat\route.ts
-import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
-import { groq } from '@ai-sdk/groq';
+import { NextRequest, NextResponse } from 'next/server';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { streamText, createDataStreamResponse } from 'ai';
+import { toolRegistry } from './tools/tool-registry';
 import { SYSTEM_PROMPT } from './prompt';
 
-export const maxDuration = 30;
+export const config = {
+  runtime: 'edge',
+  dynamic: 'force-dynamic',
+};
 
-// ✅ Set the model only
-const model = groq('mistral-saba-24b');
+function errorJSON(msg: string, status = 400) {
+  return new NextResponse(JSON.stringify({ error: msg }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// Initialize OpenRouter client
+const openrouter = createOpenAICompatible({
+  name: 'openrouter',
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY!,
+});
 
 export async function POST(req: NextRequest) {
+  let payload: any;
   try {
-    const body = await req.json();
-    let { messages } = body;
+    payload = await req.json();
+  } catch {
+    return errorJSON('Invalid JSON payload', 400);
+  }
 
-    // ✅ Add system prompt if needed
-    if (typeof SYSTEM_PROMPT === 'string') {
-      messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages];
-    } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
-      messages = [SYSTEM_PROMPT, ...messages];
+  let { messages: rawMessages, stream = false } = payload;
+  if (!Array.isArray(rawMessages)) {
+    return errorJSON('`messages` must be an array', 400);
+  }
+
+  // Prepend system prompt if provided
+  if (typeof SYSTEM_PROMPT === 'string') {
+    rawMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...rawMessages];
+  } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
+    rawMessages = [SYSTEM_PROMPT, ...rawMessages];
+  }
+
+  // Normalize into { role, content }
+  const messages = rawMessages.map((m: any) => ({
+    role: m.role,
+    content: String(m.content ?? ''),
+  }));
+
+  // Choose your model
+  const model = openrouter('mistralai/mistral-small-3.2-24b-instruct:free');
+
+  // Non‑streaming (one-shot) path
+  if (!stream) {
+    try {
+      const result = await streamText({
+        model,
+        messages,
+        tools: toolRegistry,            // pass your registry directly
+      });
+
+      const text = await result.text;
+      return NextResponse.json({ content: text });
+    } catch (err: any) {
+      console.error('Non-stream error:', err);
+      return errorJSON('Error generating completion', 500);
     }
+  }
 
-    // Add tools for tool calling
-    const tools = {
-      getProjects,
-      getPresentation,
-      getResume,
-      getContact,
-      getSkills,
-      getSports,
-      getCrazy,
-      getInternship,
-    };
-
-    // ✅ Send request to Groq API via AI SDK (add tools if needed)
+  // Streaming (SSE) path
+  try {
     const result = await streamText({
       model,
       messages,
-      tools,
+      tools: toolRegistry,
     });
 
-    // ✅ Stream back the response
+    // ✅ THIS is the correct return
     return result.toDataStreamResponse();
 
-  } catch (error) {
-    console.error('Global error:', error);
-    return new Response('Server error', { status: 500 });
-  }
-}
+    // OR:
+    // return createDataStreamResponse(result);
 
-export async function GET() {
-  return new Response("Use POST method to send chat messages.", {
-    status: 405,
-    headers: { 'Content-Type': 'text/plain' }
-  });
+  } catch (err: any) {
+    console.error('Stream error:', err);
+    return errorJSON('Error streaming completion', 500);
+  }
 }
