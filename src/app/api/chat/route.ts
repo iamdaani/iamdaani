@@ -27,72 +27,65 @@ function errorResponse(message: string, status: number = 400): Response {
   });
 }
 
-export async function POST(req: NextRequest): Promise<Response> {
-  console.log('🔥 /api/chat POST hit');            // (A)
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });                                              // (B)
+export async function POST(req: NextRequest) {
+  console.log('🔥 /api/chat POST hit');              // (1)
 
-  // Parse and validate request body
   let body;
   try {
     body = await req.json();
+    console.log('🔍 Parsed JSON:', body.stream);     // (2)
   } catch (e) {
+    console.error('❌ JSON parse failed', e);
     return errorResponse('Invalid JSON payload', 400);
   }
 
   const { messages, stream = false } = body;
-  
-  if (!Array.isArray(messages)) {
-    return errorResponse('Messages must be an array', 400);
-  }
-
-  if (!messages.some((m: { role?: string }) => m?.role === 'user')) {
-    return errorResponse('At least one user message is required', 400);
-  }
-
-  // Prepare messages
-  const cleanedMessages = messages.map((m: { role?: string; content?: unknown }) => ({
-    role: m.role,
-    content: String(m.content || ''),
-  }));
-
-  // Get the model
-  const model = openrouter('mistralai/mistral-small-3.2-24b-instruct:free');
-  
-  // Handle streaming request
-  if (stream) {
+  if (!stream) {
+    console.log('🟢 non-stream branch entered');      // (3)
     try {
-      const result = await streamText({
-        model,
-        messages: cleanedMessages,
+      // Prepare messages and model as before
+      const cleanedMessages = messages.map((m: { role?: string; content?: unknown }) => ({
+        role: m.role,
+        content: String(m.content || ''),
+      }));
+      const model = openrouter('mistralai/mistral-small-3.2-24b-instruct:free');
+
+      console.log('⏳ Calling streamText…');           // (4)
+      const result = await streamText({ model, messages: cleanedMessages });
+      console.log('✅ streamText returned');          // (5)
+
+      console.log('⏳ Awaiting result.text…');
+      const text = await result.text;
+      console.log('✅ Got text:', text);              // (6)
+
+      return new Response(JSON.stringify({ content: text }), {
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      // this one does:
-      return result.toDataStreamResponse();
-    } catch (error) {
-      console.error('Streaming error:', error);
-      return errorResponse('Error processing stream', 500);
+    } catch (e) {
+      console.error('❌ Non-stream error:', e);        // (7)
+      return errorResponse('Error in non-stream path', 500);
     }
-  } 
+  }
 
-  // Handle non-streaming request
-  const result = await streamText({
-    model,
-    messages: cleanedMessages,
-  });
-  
-  const text = await result.text;
-  
-  return new Response(JSON.stringify({
-    id: `chatcmpl-${Date.now()}`,
-    role: 'assistant',
-    content: text,
-    model: 'mistralai/mistral-small-3.2-24b-instruct:free',
-  }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  // Handle streaming request
+  try {
+    const cleanedMessages = messages.map((m: { role?: string; content?: unknown }) => ({
+      role: m.role,
+      content: String(m.content || ''),
+    }));
+    const model = openrouter('mistralai/mistral-small-3.2-24b-instruct:free');
+
+    const result = await streamText({
+      model,
+      messages: cleanedMessages,
+    });
+
+    // this one does:
+    return result.toDataStreamResponse();
+  } catch (error) {
+    console.error('Streaming error:', error);
+    return errorResponse('Error processing stream', 500);
+  } 
 
 }
 
