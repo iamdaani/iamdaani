@@ -1,9 +1,9 @@
 // src/app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { groq } from '@ai-sdk/groq';
-import { streamText, } from 'ai';
-import { toolRegistry } from './tools/tool-registry';
+import { streamText } from 'ai';
 import { SYSTEM_PROMPT } from './prompt';
+import { toolRegistry } from './tools/tool-registry';
 
 export const config = {
   runtime: 'edge',
@@ -30,23 +30,23 @@ export async function POST(req: NextRequest) {
     return errorJSON('`messages` must be an array', 400);
   }
 
-  // Prepend system prompt if provided
+  // Prepend system prompt
   if (typeof SYSTEM_PROMPT === 'string') {
     rawMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...rawMessages];
   } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
     rawMessages = [SYSTEM_PROMPT, ...rawMessages];
   }
 
-  // Normalize into { role, content }
+  // Normalize messages
   const messages = rawMessages.map((m: any) => ({
     role: m.role,
     content: String(m.content ?? ''),
   }));
 
-  // Use groq and mistral-saba-24b model
+  // Select Groq model
   const model = groq('mistral-saba-24b');
 
-  // Non‑streaming (one-shot) path
+  // Non-streaming path
   if (!stream) {
     try {
       const result = await streamText({
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Streaming (SSE) path
+  // Streaming path
   try {
     const result = await streamText({
       model,
@@ -71,11 +71,17 @@ export async function POST(req: NextRequest) {
       tools: toolRegistry,
     });
 
-    // ✅ THIS is the correct return
-    return result.toDataStreamResponse;
-
+    // ✅ Correct streaming response for `useChat`
+    return await result.toDataStreamResponse();
   } catch (err: any) {
     console.error('Stream error:', err);
     return errorJSON('Error streaming completion', 500);
   }
+}
+
+export async function GET() {
+  return new NextResponse('Use POST to chat', {
+    status: 405,
+    headers: { 'Content-Type': 'text/plain' },
+  });
 }
