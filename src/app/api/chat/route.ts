@@ -1,3 +1,13 @@
+// src/app/api/chat/route.ts
+import { getContact } from './tools/getContact';
+import { getCrazy } from './tools/getCrazy';
+import { getInternship } from './tools/getIntership';
+import { getPresentation } from './tools/getPresentation';
+import { getProjects } from './tools/getProjects';
+import { getResume } from './tools/getResume';
+import { getSkills } from './tools/getSkills';
+import { getSports } from './tools/getSport';
+// filepath: z:\github\ahmadyar\src\app\api\chat\route.ts
 import { NextRequest } from 'next/server';
 import { streamText } from 'ai';
 import { groq } from '@ai-sdk/groq';
@@ -20,10 +30,23 @@ export async function POST(req: NextRequest) {
       messages = [SYSTEM_PROMPT, ...messages];
     }
 
-    // ✅ Send request to Groq API via AI SDK
+    // Add tools for tool calling
+    const tools = {
+      getProjects,
+      getPresentation,
+      getResume,
+      getContact,
+      getSkills,
+      getSports,
+      getCrazy,
+      getInternship,
+    };
+
+    // ✅ Send request to Groq API via AI SDK (add tools if needed)
     const result = await streamText({
       model,
       messages,
+      tools,
     });
 
     // ✅ Stream back the response
