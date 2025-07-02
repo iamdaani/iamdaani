@@ -5,6 +5,8 @@ import { streamText } from 'ai'; // Only import streamText
 export const config = {
   runtime: 'edge',
 };
+// Turn off caching so our SSE can flow freely
+export const dynamic = 'force-dynamic';
 
 // Create OpenAI-compatible client
 const openrouter = createOpenAICompatible({
@@ -62,9 +64,8 @@ export async function POST(req: NextRequest): Promise<Response> {
           messages: cleanedMessages,
         });
 
-        // Convert to AI stream response - no additional imports needed
+        // this one does:
         return result.toDataStreamResponse();
-        
       } catch (error) {
         console.error('Streaming error:', error);
         return errorResponse('Error processing stream', 500);
