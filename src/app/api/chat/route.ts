@@ -16,7 +16,7 @@ import { SYSTEM_PROMPT } from './prompt';
 export const maxDuration = 30;
 
 // ✅ Set the model only
-const model = groq('Mistral Saba 24B');
+const model = groq('mistral-saba-24b');
 
 export async function POST(req: NextRequest) {
   try {
