@@ -1,84 +1,43 @@
-// app/api/chat/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { streamText, createDataStreamResponse } from 'ai';
+import { NextRequest } from 'next/server';
+import { streamText } from 'ai';
+import { groq } from '@ai-sdk/groq';
+import { SYSTEM_PROMPT } from './prompt';
 
-export const config = {
-  runtime: 'edge',
-  // Force no caching so SSE always flows
-  dynamic: 'force-dynamic',
-};
+export const maxDuration = 30;
 
-const openrouter = createOpenAICompatible({
-  name: 'openrouter',
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY!,
-});
-
-function errorJSON(msg: string, status = 400) {
-  return new NextResponse(JSON.stringify({ error: msg }), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+// ✅ Set the model only
+const model = groq('llama3-8b-8192');
 
 export async function POST(req: NextRequest) {
-  let payload: any;
   try {
-    payload = await req.json();
-  } catch {
-    return errorJSON('Invalid JSON body', 400);
-  }
+    const body = await req.json();
+    let { messages } = body;
 
-  const { messages, stream = false } = payload;
-  if (!Array.isArray(messages)) {
-    return errorJSON('`messages` must be an array', 400);
-  }
-
-  // Normalize messages
-  const cleaned = messages.map((m: any) => ({
-    role: m.role,
-    content: String(m.content ?? ''),
-  }));
-
-  const model = openrouter('mistralai/mistral-small-3.2-24b-instruct:free');
-
-  // Non‑streaming: return a one‑shot JSON
-  if (!stream) {
-    try {
-      const result = await streamText({ model, messages: cleaned });
-      // Safely await first or full text
-      let text = 'No content';
-      try {
-        text = result.fullStream
-          ? ((await result.fullStream[Symbol.asyncIterator]().next()).value?.text ?? (await result.text))
-          : await result.text;
-      } catch {
-        text = await result.text;
-      }
-      return NextResponse.json({ content: text });
-    } catch (err: any) {
-      console.error('❌ non‑stream error', err);
-      return errorJSON('Error generating completion', 500);
+    // ✅ Add system prompt if needed
+    if (typeof SYSTEM_PROMPT === 'string') {
+      messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages];
+    } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
+      messages = [SYSTEM_PROMPT, ...messages];
     }
-  }
 
-  // Streaming: proper SSE with data: {...} chunks
-  try {
-    const result = await streamText({ model, messages: cleaned });
-    return createDataStreamResponse({
-      execute: async (writer) => {
-        for await (const chunk of result.fullStream ?? []) {
-          writer.write(`a:${JSON.stringify(chunk)}\n`);
-        }
-      }
+    // ✅ Send request to Groq API via AI SDK
+    const result = await streamText({
+      model,
+      messages,
     });
-  } catch (err: any) {
-    console.error('❌ stream error', err);
-    return errorJSON('Error streaming completion', 500);
+
+    // ✅ Stream back the response
+    return result.toDataStreamResponse();
+
+  } catch (error) {
+    console.error('Global error:', error);
+    return new Response('Server error', { status: 500 });
   }
 }
 
 export async function GET() {
-  return errorJSON('Method not allowed. Use POST', 405);
+  return new Response("Use POST method to send chat messages.", {
+    status: 405,
+    headers: { 'Content-Type': 'text/plain' }
+  });
 }
