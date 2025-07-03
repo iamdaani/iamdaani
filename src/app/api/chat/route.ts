@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     // Kick off streaming with Groq + mistral-saba-24b
     const result = streamText({
-      model: groq('llama-3.3-70b-versatile'),
+      model: groq('mistral-saba-24b'),
       messages,
       toolCallStreaming: true,
       tools,
