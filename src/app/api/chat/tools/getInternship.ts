@@ -9,7 +9,7 @@ export const getInternship = tool({
     return `Here’s what I’m looking for 👇
 
 - 📅 **Duration**: 6-month internship starting **September 2025**
-- 🌍 **Location**: Preferably **San Francisco** or anywhere in the **United States**
+- 🌍 **Location**: Preferably **Lahore** or anywhere in the **Pakistan**
 - 🧑‍💻 **Focus**: AI development, full-stack web apps, SaaS, agentic workflows
 - 🛠️ **Stack**: Python, React/Next.js, Tailwind CSS, TypeScript, GPT, RAG, etc.
 - 💼 **Visa**: I’m based in Paris 🇫🇷 so I might need **J-1 sponsorship**
@@ -17,9 +17,8 @@ export const getInternship = tool({
 - 🔥 I move fast, learn faster, and I’m HUNGRYYYYY for big challenges
 
 📬 **Contact me** via:
-- Email: raphaelgiraud12@gmail.com
-- LinkedIn: [linkedin.com/in/raphael-giraud](https://www.linkedin.com/in/raphael-giraud-ai/)
-- GitHub: [github.com/raphaelgiraud](https://github.com/toukoum)
+- Email: ahamdjin34@gmail.com
+- LinkedIn: [linkedin.com/in/raphael-giraud](https://www.linkedin.com/in/ahamd-yar/)
 
 Let's build cool shit together ✌️
     `;

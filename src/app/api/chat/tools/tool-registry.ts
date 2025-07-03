@@ -7,7 +7,7 @@ import { getSkills } from './getSkills';
 import { getPresentation } from './getPresentation';
 import { getSports } from './getSport';
 import { getCrazy } from './getCrazy';
-import { getInternship } from './getIntership';
+import { getInternship } from './getInternship';
 
 export const toolRegistry = {
   getContact,
