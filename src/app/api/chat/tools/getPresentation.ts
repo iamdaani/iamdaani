@@ -3,12 +3,12 @@ import { z } from 'zod';
 
 export const getPresentation = tool({
   description:
-    'This tool returns a concise personal introduction of Raphael Giraud. It is used to answer the question "Who are you?" or "Tell me about yourself"',
+    'This tool returns a concise personal introduction of Ahmad Yar. It is used to answer the question "Who are you?" or "Tell me about yourself"',
   parameters: z.object({}),
   execute: async () => {
     return {
       presentation:
-        "I'm Raphael Giraud, a 21-year-old developer specializing in AI at 42 Paris. Formerly a high-level mountain biker, I now intern at LightOn AI in Paris. I'm passionate about AI, tech, Entrepreneurship and SaaS tech.",
+        "I'm Ahmad Yar — a 20-year-old automation nerd from Lahore who believes n8n flows should come with a seatbelt. I build AI-driven systems that work *while I sleep* 😎. If it's automatable, I'll automate it—sometimes even my breakfast reminders. Let's make the future a bit smarter (and lazier).",
     };
   },
 });
