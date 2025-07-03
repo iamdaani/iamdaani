@@ -3,24 +3,30 @@ import { z } from 'zod';
 
 export const getInternship = tool({
   description:
-    "Gives a summary of what kind of internship I'm looking for, plus my contact info and how to reach me. Use this tool when the user asks about my internship search or how to contact me for opportunities.",
+    "Returns a summary of the internship I'm looking for, including my technical focus, skills, and how to get in touch. Use when the user asks about my internship, what I specialize in, or how to contact me.",
   parameters: z.object({}),
   execute: async () => {
     return `Here’s what I’m looking for 👇
 
 - 📅 **Duration**: 6-month internship starting **September 2025**
-- 🌍 **Location**: Preferably **Lahore** or anywhere in the **Pakistan**
-- 🧑‍💻 **Focus**: AI development, full-stack web apps, SaaS, agentic workflows
-- 🛠️ **Stack**: Python, React/Next.js, Tailwind CSS, TypeScript, GPT, RAG, etc.
-- 💼 **Visa**: I’m based in Paris 🇫🇷 so I might need **J-1 sponsorship**
-- ✅ **What I bring**: Real experience with secure on-prem GPTs (Lighton), deepsearch engines, custom RAG tools, and hackathon wins like **ETH Oxford** & **Paris Blockchain Week**
-- 🔥 I move fast, learn faster, and I’m HUNGRYYYYY for big challenges
+- 🌍 **Location**: Preferably **Remote**, or onsite in **Lahore** or anywhere in **Pakistan**
+- 🧠 **Focus Areas**: AI Automation, Shopify Development, Prompt Engineering, API Integration, Data Pipelines
+- ⚙️ **Tech Highlights**:
+  - Built automation pipelines using **n8n**, **Make.com**, and custom scripts
+  - Integrated **AI agents** with **Vapi.ai**, **OpenAI**, and **Ollama**
+  - Automated **Shopify** stores (inventory sync, order flows, analytics)
+  - Used **Power BI**, **Google Sheets**, and **Excel** for real-time dashboards
+  - Freelance experience on **Upwork**, delivering full solutions to clients
 
-📬 **Contact me** via:
-- Email: ahamdjin34@gmail.com
-- LinkedIn: [linkedin.com/in/raphael-giraud](https://www.linkedin.com/in/ahamd-yar/)
+🛠️ Strong grasp of:
+- API architecture, webhooks, and real-time sync across tools
+- Building practical systems that automate manual work
+- Connecting automation with voice, sheets, CRM, dashboards, and AI
 
-Let's build cool shit together ✌️
+📎 **See more skills** → *[Click to trigger “getSkills”]*  
+📬 **Connect** → *[Click to trigger “getContact”]*
+
+🚀 Let’s automate, analyze, and ship useful systems together.
     `;
   },
 });
