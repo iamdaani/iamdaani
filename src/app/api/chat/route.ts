@@ -1,67 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { groq } from '@ai-sdk/groq';
-import { streamText, createDataStreamResponse } from 'ai';
-import { z } from 'zod';
-
-// Define your tool inline
-const getSkills = {
-  name: 'getSkills',
-  description: 'Returns a list of my technical skills',
-  parameters: z.object({}),          // no parameters
-  execute: async (_params: any, _ctx: any) => {
-    // simulate fetching or computation
-    return 'My skills are: TypeScript, React, Node.js, and Python.';
-  },
-};
+import { streamText } from 'ai';
+import { SYSTEM_PROMPT } from './prompt';
+import { toolRegistry } from './tools/tool-registry';
 
 export const config = {
   runtime: 'edge',
   dynamic: 'force-dynamic',
 };
 
-function errorJSON(msg: string, status = 400) {
-  return new NextResponse(JSON.stringify({ error: msg }), {
+export const maxDuration = 30;
+
+// Simple error response
+function errorJSON(message: string, status = 400) {
+  return new NextResponse(JSON.stringify({ error: message }), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
 }
 
+// Optional: friendly error extractor
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Unknown error';
+}
+
 export async function POST(req: NextRequest) {
   let body: any;
+
   try {
     body = await req.json();
   } catch {
-    return errorJSON('Invalid JSON payload', 400);
+    return errorJSON('Invalid JSON body', 400);
   }
 
-  const { messages: raw, stream = true } = body;
-  if (!Array.isArray(raw)) {
+  let { messages: rawMessages, stream = true } = body;
+
+  if (!Array.isArray(rawMessages)) {
     return errorJSON('`messages` must be an array', 400);
   }
 
-  // normalize
-  const messages = raw.map((m: any) => ({
+  // Add system prompt if available
+  if (typeof SYSTEM_PROMPT === 'string') {
+    rawMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...rawMessages];
+  } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
+    rawMessages = [SYSTEM_PROMPT, ...rawMessages];
+  }
+
+  // Normalize to required shape
+  const messages = rawMessages.map((m: any) => ({
     role: m.role,
     content: String(m.content ?? ''),
   }));
 
   try {
-    // Kick off streaming with tool support
-    const result = await streamText({
+    const result = streamText({
       model: groq('mistral-saba-24b'),
       messages,
-      tools: { getSkills },
       toolCallStreaming: true,
+      tools: toolRegistry,
+      maxSteps: 2,
     });
 
-    // Return proper SSE to the client
-     result.toDataStreamResponse;
-  } catch (err: any) {
-    console.error('API error:', err);
-    return errorJSON(err.message || 'Internal error', 500);
+    return result.toDataStreamResponse({ getErrorMessage });
+  } catch (err) {
+    console.error('Global error:', err);
+    return errorJSON(getErrorMessage(err), 500);
   }
 }
 
 export async function GET() {
-  return new NextResponse('Use POST to chat', { status: 405 });
+  return new NextResponse('Use POST for chat.', {
+    status: 405,
+    headers: { 'Content-Type': 'text/plain' },
+  });
 }
