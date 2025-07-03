@@ -1,91 +1,103 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { ChevronRight, Phone, Mail, User2 } from "lucide-react";
+import { FaLinkedin, FaGithub, FaYoutube, FaTwitter, FaInstagram } from "react-icons/fa";
 
 export function Contact() {
-  // Contact information
   const contactInfo = {
-    name: 'Raphael Giraud',
-    email: 'raphaelgiraud12@gmail.com',
-    handle: '@Raphael.Giraud',
+    name: "Ahmad Yar",
+    email: "ahamdjin34@gmail.com",
+    phone: "+92 326-6255946",
+    linkedin: "https://www.linkedin.com/in/ahamd-yar/",
+    handle: "@AhmadYar",
     socials: [
       {
-        name: 'LinkedIn',
-        url: 'https://www.linkedin.com/in/raphael-giraud-60939519a/',
+        name: "LinkedIn",
+        icon: <FaLinkedin className="inline-block mr-1" />,
+        url: "https://www.linkedin.com/in/ahamd-yar/",
       },
       {
-        name: 'Youtube',
-        url: 'https://www.youtube.com/@toukoum',
+        name: "GitHub",
+        icon: <FaGithub className="inline-block mr-1" />,
+        url: "https://github.com/ahmad-yar",
       },
       {
-        name: 'Instagram',
-        url: 'https://www.instagram.com/raphael.giraud/',
+        name: "YouTube",
+        icon: <FaYoutube className="inline-block mr-1" />,
+        url: "https://www.youtube.com/@ahmadyar",
       },
       {
-        name: 'Discord',
-        url: 'https://discord.com/users/toukoum',
+        name: "Twitter",
+        icon: <FaTwitter className="inline-block mr-1" />,
+        url: "https://x.com/ahmadyar",
       },
       {
-        name: 'Github',
-        url: 'https://github.com/toukoum',
-      },
-      {
-        name: 'X',
-        url: 'https://x.com/toukoumcode',
+        name: "Instagram",
+        icon: <FaInstagram className="inline-block mr-1" />,
+        url: "https://instagram.com/ahmadyar",
       },
     ],
   };
 
-  // Function to handle opening links
   const openLink = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="mx-auto mt-8 w-full">
-      <div className="bg-accent w-full overflow-hidden rounded-3xl px-6 py-8 font-sans sm:px-10 md:px-16 md:py-12">
-        {/* Header Section */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-foreground text-3xl font-semibold md:text-4xl">
-            Contacts
-          </h2>
-          <span className="mt-2 sm:mt-0">
-            {contactInfo.handle}
-          </span>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="mx-auto mt-12 w-full max-w-4xl"
+    >
+      <div className="bg-accent rounded-3xl px-6 py-10 sm:px-12 md:py-14 shadow-xl">
+        <div className="mb-8 text-center">
+          <h2 className="text-foreground text-3xl font-bold md:text-4xl">Get in Touch</h2>
+          <p className="text-muted-foreground mt-2 text-sm">I'd love to connect with you! Feel free to reach out.</p>
         </div>
 
-        {/* Email Section */}
-        <div className="mt-8 flex flex-col md:mt-10">
+        <div className="space-y-5">
+          <div className="flex items-center gap-3">
+            <User2 className="text-blue-600" />
+            <span className="text-base font-medium text-foreground">{contactInfo.name}</span>
+          </div>
           <div
-            className="group mb-5 cursor-pointer"
+            className="group flex items-center gap-3 cursor-pointer"
             onClick={() => openLink(`mailto:${contactInfo.email}`)}
           >
-            <div className="flex items-center gap-1">
-              <span className="text-base font-medium text-blue-500 hover:underline sm:text-lg">
-                {contactInfo.email}
-              </span>
-              <ChevronRight className="h-5 w-5 text-blue-500 transition-transform duration-300 group-hover:translate-x-1" />
-            </div>
+            <Mail className="text-blue-600" />
+            <span className="text-blue-500 hover:underline text-sm">{contactInfo.email}</span>
+            <ChevronRight className="h-5 w-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
           </div>
+          <div
+            className="group flex items-center gap-3 cursor-pointer"
+            onClick={() => openLink(`tel:${contactInfo.phone}`)}
+          >
+            <Phone className="text-blue-600" />
+            <span className="text-blue-500 hover:underline text-sm">{contactInfo.phone}</span>
+            <ChevronRight className="h-5 w-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
 
-          {/* Social Links */}
-          <div className="flex flex-wrap gap-x-6 gap-y-5 sm:gap-x-8">
+        <div className="mt-10">
+          <h3 className="text-lg font-semibold text-foreground mb-3">Socials</h3>
+          <div className="flex flex-wrap gap-4">
             {contactInfo.socials.map((social) => (
               <button
                 key={social.name}
-                className="text-muted-foreground hover:text-foreground cursor-pointer text-sm transition-colors"
                 onClick={() => openLink(social.url)}
-                title={social.name}
+                className="flex items-center gap-2 rounded-full border border-muted px-4 py-2 text-muted-foreground hover:text-foreground hover:shadow-sm transition-colors"
               >
-                {social.name}
+                {social.icon}
+                <span className="text-sm font-medium">{social.name}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
