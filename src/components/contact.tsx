@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Linkedin, Mail, Phone } from 'lucide-react';
 import Image from 'next/image';
 
-// Fix export to use default
+// Exported as default to avoid import errors
 const Contact = () => {
   const contactInfo = {
     name: 'Ahmad Yar',
@@ -88,10 +88,10 @@ const Contact = () => {
         </motion.div>
 
         {/* LinkedIn */}
-        <motion.div whileHover={{ scale: 1.03 }} className="group flex items-center gap-3">
+        <motion.div whileHover={{ scale: 1.03 }} className="group flex items-center gap-3 sm:col-span-2">
           <button
             onClick={() => openLink(contactInfo.linkedin)}
-            className="inline-flex items-center gap-2 rounded-full bg-blue-600 text-white px-5 py-2 font-medium hover:bg-blue-700 transition-all shadow-md"
+            className="inline-flex items-center gap-2 rounded-full bg-blue-600 text-white px-6 py-3 font-semibold hover:bg-blue-700 transition-all shadow-lg"
             title="Visit LinkedIn"
           >
             <Linkedin className="h-5 w-5" />
