@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { groq } from '@ai-sdk/groq';
+import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { SYSTEM_PROMPT } from './prompt';
 import { toolRegistry } from './tools/tool-registry';
@@ -8,6 +8,8 @@ export const config = {
   runtime: 'edge',
   dynamic: 'force-dynamic',
 };
+
+export const maxDuration = 30;
 
 // Simple error response
 function errorJSON(message: string, status = 400) {
@@ -53,18 +55,17 @@ export async function POST(req: NextRequest) {
   }));
 
   try {
-    const result = await streamText({
-      model: groq('mistral-saba-24b'),
+    const result = streamText({
+      model: openai('gpt-4o-mini'),
       messages,
-      tools: toolRegistry,
       toolCallStreaming: true,
+      tools: toolRegistry,
       maxSteps: 2,
-      // If you need to handle function calls, refer to the ai SDK documentation for the correct approach.
     });
 
     return result.toDataStreamResponse({ getErrorMessage });
   } catch (err) {
-    console.error('StreamText error:', err);
+    console.error('Global error:', err);
     return errorJSON(getErrorMessage(err), 500);
   }
 }
