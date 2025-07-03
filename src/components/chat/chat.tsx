@@ -94,3 +94,10 @@ export async function GET() {
     headers: { 'Content-Type': 'text/plain' },
   });
 }
+
+function Chat() {
+  // ...your React component logic here...
+  return <div>Chat UI goes here</div>;
+}
+
+export default Chat;
