@@ -1,56 +1,96 @@
-'use client';
+// src/app/api/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { groq } from '@ai-sdk/groq';
+import { streamText, createDataStreamResponse } from 'ai';
+import { z } from 'zod';
 
-import { useChat } from '@ai-sdk/react';
-import React from 'react';
+export const config = {
+  runtime: 'edge',
+  dynamic: 'force-dynamic',
+};
 
-export default function Chat() {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    addToolResult,
-  } = useChat({
-    api: '/api/chat',
-    onToolCall: ({ toolCall, ...rest }) => {
-      // When the backend streams back a tool result, this handler fires:
-      const result = (rest as any).result;
-      if (result !== undefined) {
-        addToolResult({
-          toolCallId: toolCall.toolCallId,
-          result: result,
-        });
-      }
-    },
+// --- Inline tool definitions to test tool calling ---
+const getSkills = {
+  name: 'getSkills',
+  description: 'Returns a list of technical skills',
+  parameters: z.object({}),
+  execute: async (_params: any, _ctx: any) => {
+    return 'TypeScript, React, Node.js, Python';
+  },
+};
+
+const getContact = {
+  name: 'getContact',
+  description: 'Returns contact information',
+  parameters: z.object({}),
+  execute: async (_params: any, _ctx: any) => {
+    return {
+      email: 'you@example.com',
+      phone: '+1234567890',
+    };
+  },
+};
+
+// Helper for JSON error responses
+function errorJSON(message: string, status = 400) {
+  return new NextResponse(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
   });
+}
 
-  return (
-    <div style={{ padding: 20, maxWidth: 600, margin: '0 auto' }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="text"
-          value={input}
-          onChange={handleInputChange}
-          placeholder="Ask: what are your skills?"
-          style={{ flex: 1, padding: 8 }}
-          disabled={isLoading}
-        />
-        <button type="submit" disabled={isLoading} style={{ padding: '0 16px' }}>
-          Send
-        </button>
-      </form>
+function extractError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  return 'Unknown error';
+}
 
-      <div style={{ marginTop: 20 }}>
-        {messages.map((m, i) => (
-          <div key={i} style={{ marginBottom: 12 }}>
-            <strong>{m.role}:</strong>{' '}
-            {m.parts?.some(p => p.type === 'tool-invocation') 
-              ? '[Tool call]' 
-              : m.content}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+export async function POST(req: NextRequest) {
+  // 1) Parse payload
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return errorJSON('Invalid JSON body', 400);
+  }
+
+  // 2) Validate messages array
+  const { messages: raw, stream = true } = body;
+  if (!Array.isArray(raw)) {
+    return errorJSON('`messages` must be an array', 400);
+  }
+
+  // 3) Normalize messages
+  const messages = raw.map((m: any) => ({
+    role: m.role,
+    content: String(m.content ?? ''),
+  }));
+
+  // 4) Call the model with inline tools
+  try {
+    const result = await streamText({
+      model: groq('mistral-saba-24b'),
+      messages,
+      tools: { getSkills, getContact },
+      toolCallStreaming: true,
+    });
+
+    // 5) Stream or one‑shot
+    if (stream) {
+      return result.toDataStreamResponse;
+    } else {
+      const text = await result.text;
+      return NextResponse.json({ content: text });
+    }
+  } catch (err: unknown) {
+    console.error('StreamText error:', err);
+    return errorJSON(extractError(err), 500);
+  }
+}
+
+export async function GET() {
+  return new NextResponse('Use POST to chat', {
+    status: 405,
+    headers: { 'Content-Type': 'text/plain' },
+  });
 }
