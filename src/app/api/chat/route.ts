@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { openai } from '@ai-sdk/openai';
+import { groq } from '@ai-sdk/groq';
 import { streamText } from 'ai';
 import { SYSTEM_PROMPT } from './prompt';
 import { toolRegistry } from './tools/tool-registry';
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = streamText({
-      model: openai('gpt-4o-mini'),
+      model: groq('mistral-saba-24b'),
       messages,
       toolCallStreaming: true,
       tools: toolRegistry,
