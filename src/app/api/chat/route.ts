@@ -1,78 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { groq } from '@ai-sdk/groq';
+import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { SYSTEM_PROMPT } from './prompt';
-import { toolRegistry } from './tools/tool-registry';
-
-export const config = {
-  runtime: 'edge',
-  dynamic: 'force-dynamic',
-};
+import { getContact } from './tools/getContact';
+import { getCrazy } from './tools/getCrazy';
+import { getInternship } from './tools/getIntership';
+import { getPresentation } from './tools/getPresentation';
+import { getProjects } from './tools/getProjects';
+import { getResume } from './tools/getResume';
+import { getSkills } from './tools/getSkills';
+import { getSports } from './tools/getSport';
 
 export const maxDuration = 30;
 
-// Simple error response
-function errorJSON(message: string, status = 400) {
-  return new NextResponse(JSON.stringify({ error: message }), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+// ❌ Pas besoin de l'export ici, Next.js n'aime pas ça
+function errorHandler(error: unknown) {
+  if (error == null) {
+    return 'Unknown error';
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return JSON.stringify(error);
 }
 
-// Optional: friendly error extractor
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  return 'Unknown error';
-}
-
-export async function POST(req: NextRequest) {
-  let body: any;
-
+export async function POST(req: Request) {
   try {
-    body = await req.json();
-  } catch {
-    return errorJSON('Invalid JSON body', 400);
-  }
+    const { messages } = await req.json();
+    console.log('[CHAT-API] Incoming messages:', messages);
 
-  let { messages: rawMessages, stream = true } = body;
+    messages.unshift(SYSTEM_PROMPT);
 
-  if (!Array.isArray(rawMessages)) {
-    return errorJSON('`messages` must be an array', 400);
-  }
+    const tools = {
+      getProjects,
+      getPresentation,
+      getResume,
+      getContact,
+      getSkills,
+      getSports,
+      getCrazy,
+      getInternship,
+    };
 
-  // Add system prompt if available
-  if (typeof SYSTEM_PROMPT === 'string') {
-    rawMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...rawMessages];
-  } else if (SYSTEM_PROMPT?.role && SYSTEM_PROMPT?.content) {
-    rawMessages = [SYSTEM_PROMPT, ...rawMessages];
-  }
-
-  // Normalize to required shape
-  const messages = rawMessages.map((m: any) => ({
-    role: m.role,
-    content: String(m.content ?? ''),
-  }));
-
-  try {
     const result = streamText({
-      model: groq('mistral-saba-24b'),
+      model: openai('gpt-4o-mini'),
       messages,
       toolCallStreaming: true,
-      tools: toolRegistry,
+      tools,
       maxSteps: 2,
     });
 
-    return result.toDataStreamResponse({ getErrorMessage });
+    return result.toDataStreamResponse({
+      getErrorMessage: errorHandler,
+    });
   } catch (err) {
     console.error('Global error:', err);
-    return errorJSON(getErrorMessage(err), 500);
+    const errorMessage = errorHandler(err);
+    return new Response(errorMessage, { status: 500 });
   }
-}
-
-export async function GET() {
-  return new NextResponse('Use POST for chat.', {
-    status: 405,
-    headers: { 'Content-Type': 'text/plain' },
-  });
 }
