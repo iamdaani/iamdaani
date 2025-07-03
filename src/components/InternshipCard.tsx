@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarDays, Globe, Cpu } from 'lucide-react';
 import Image from 'next/image';
@@ -8,6 +9,24 @@ import { useChat } from 'ai/react';
 const InternshipCard = () => {
   const { append } = useChat();
 
+  // 1️⃣ Automatically fetch internship summary when chat asks for it:
+  useEffect(() => {
+    const fetchInternship = async () => {
+      // If last user message contains “internship”, invoke the tool
+      const last = document
+        .querySelectorAll('.message.user')
+        .item(document.querySelectorAll('.message.user').length - 1)
+        ?.textContent ?? '';
+      if (/internship/i.test(last)) {
+        // Replace this with your actual function call logic or API call
+        const result = "Internship summary goes here."; // Placeholder
+        append({ role: 'assistant', content: result });
+      }
+    };
+    fetchInternship();
+  }, [append]);
+
+  // 2️⃣ “See more skills” and “Contact me”
   const seeMoreSkills = () =>
     append({ role: 'user', content: 'Want to know more about my Skills' });
   const getContactInfo = () =>
@@ -33,7 +52,7 @@ const InternshipCard = () => {
             />
           </div>
           <div>
-            <h2 className="text-foreground text-2xl font-semibold">Ahmad Yar</h2>
+            <h2 className="text-foreground text-2xl font-semibold">Ahmad Yar</h2>
             <p className="text-muted-foreground text-sm">Internship Seeker</p>
           </div>
         </div>
@@ -52,73 +71,64 @@ const InternshipCard = () => {
           <CalendarDays className="mt-1 h-5 w-5 text-blue-500" />
           <div>
             <p className="text-foreground text-sm font-medium">Duration</p>
-            <p className="text-muted-foreground text-sm">6 months (Sept ’25 start)</p>
+            <p className="text-muted-foreground text-sm">6 months (Sept ’25)</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
           <Globe className="mt-1 h-5 w-5 text-green-500" />
           <div>
             <p className="text-foreground text-sm font-medium">Location</p>
-            <p className="text-muted-foreground text-sm">Remote / Hybrid (Pakistan)</p>
-          </div>
-        </div>
-
-        {/* Tech stack */}
-        <div className="flex items-start gap-3 sm:col-span-2">
-          <Cpu className="mt-1 h-5 w-5 text-purple-500" />
-          <div className="w-full">
-            <p className="text-foreground text-sm font-medium mb-2">Tech stack</p>
-            <div className="text-muted-foreground grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-2">
-              <ul className="list-disc pl-4 space-y-1">
-                <li>AWS Serverless & Data Warehousing</li>
-                <li>ETL & Orchestration (Glue, Airflow, n8n)</li>
-                <li>AI/ML Integrations & Prompt Engineering</li>
-                <li>Shopify Liquid, GraphQL, Webhooks</li>
-              </ul>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Power BI & Real‑Time Dashboards</li>
-                <li>Google Sheets & Excel Automations</li>
-                <li>Voice + CRM + BI Workflow Flows</li>
-                <li>
-                  Upwork Freelance Projects ·{' '}
-                  <button
-                    onClick={seeMoreSkills}
-                    className="text-blue-600 underline hover:text-blue-800 transition-colors"
-                  >
-                    See more
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <p className="text-muted-foreground text-sm">Remote / Hybrid (PK)</p>
           </div>
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="mt-10 space-y-4">
+      {/* Tech stack */}
+      <div className="mt-8 flex items-start gap-3">
+        <Cpu className="mt-1 h-5 w-5 text-purple-500" />
+        <div className="w-full">
+          <p className="text-foreground text-sm font-medium mb-2">Tech stack</p>
+          <div className="text-muted-foreground grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-2">
+            <ul className="list-disc pl-4 space-y-1">
+              <li>AWS Serverless & Data Warehousing</li>
+              <li>ETL & Orchestration (Glue, Airflow, n8n)</li>
+              <li>AI/ML & Prompt Engineering (OpenAI, Ollama)</li>
+              <li>Shopify Liquid, GraphQL, Webhooks</li>
+            </ul>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>Power BI & Real‑Time Dashboards</li>
+              <li>Google Sheets & Excel Automations</li>
+              <li>Voice → CRM → BI Workflow Flows</li>
+              <li>
+                Upwork Freelance ·{' '}
+                <button
+                  onClick={seeMoreSkills}
+                  className="text-blue-600 underline hover:text-blue-800 transition-colors"
+                >
+                  See more
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary & Actions */}
+      <div className="mt-10 space-y-6">
         <div>
           <h3 className="text-foreground text-lg font-semibold">What I Bring</h3>
           <p className="text-foreground text-sm">
-            Delivered end‑to‑end automation: from call tracking & AI agents to BI dashboards.
-            Designed scalable, secure data pipelines and Shopify automations that move the needle.
+            End‑to‑end automation: data pipelines, AI agents, and dashboards—deployed as secure, scalable services.
           </p>
         </div>
-        <div>
-          <h3 className="text-foreground text-lg font-semibold">Goal</h3>
-          <p className="text-foreground text-sm">
-            Join a forward‑thinking team to build AI‑driven automation at scale and grow as a technical lead.
-          </p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={getContactInfo}
+            className="rounded-full bg-black px-6 py-3 text-white font-semibold transition hover:bg-zinc-800"
+          >
+            Contact me
+          </button>
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="mt-10 flex justify-center gap-4">
-        <button
-          onClick={getContactInfo}
-          className="rounded-full bg-black px-6 py-3 text-white font-semibold transition hover:bg-zinc-800"
-        >
-          Contact me
-        </button>
       </div>
     </motion.div>
   );

@@ -3,35 +3,40 @@ import { z } from 'zod';
 
 export const getInternship = tool({
   description:
-    "Summarizes the 6‑month internship I'm seeking: focus areas, core skills (cloud, data engineering, automation, AI, Shopify), and how to connect.",
+    "Returns a summary of the internship I'm looking for, including my technical focus, skills, and how to get in touch. Use when the user asks about my internship, what I specialize in, or how to contact me.",
   parameters: z.object({}),
   execute: async () => {
-    return `🚀 **6‑Month Internship** (Sept ’25 start)
+    return `Here’s what I’m looking for 👇
 
-🔍 **Focus Areas**
-- Cloud Architecture & Serverless (AWS Lambda, S3, EventBridge)
-- Data Engineering & ETL (Glue, Airflow, BigQuery, Snowflake)
-- Workflow Automation & Orchestration (n8n, Make.com)
-- AI/ML Integration & Prompt Engineering (OpenAI, Vapi.ai, Ollama)
-- Shopify Development & Apps (Liquid, GraphQL, Webhooks)
+- 📅 **Duration**: 6-month internship starting **September 2025**
+- 🌍 **Location**: Preferably **Remote**, or onsite in **Lahore** or anywhere in **Pakistan**
+- 🧠 **Focus Areas**: AI Automation, Shopify Development, Prompt Engineering, API Integration, Data Pipelines
+- ⚙️ **Tech Highlights**:
+### 🔧 Core Focus
+- **Cloud & Serverless:** AWS Lambda, S3, EventBridge  
+- **Data Engineering:** ETL with Glue & Airflow, BigQuery, Snowflake  
+- **Automation & Orchestration:** n8n, Make.com, Zapier  
+- **AI/ML Integration:** OpenAI, Vapi.ai, Ollama, RAG & Prompt Engineering  
+- **Shopify Development:** Liquid, GraphQL, Webhooks, Custom Apps  
 
-💡 **Core Strengths**
-- Building end‑to‑end data pipelines and real‑time dashboards
-- Automating complex workflows: voice calls → CRM → BI
-- Integrating LLMs into production systems
-- Designing scalable, secure microservices and no‑code solutions
+### 📈 Key Strengths
+- Building **end‑to‑end data pipelines** and **real‑time dashboards**  
+- Automating **voice → CRM → BI** workflows with AI agents  
+- Deploying **secure, scalable microservices** (Docker, CI/CD)  
+- Driving **Shopify store automations** (inventory sync, order routing)  
 
-📈 **Results & Experience**
-- Automated call‑tracking + SMS flows for clients (Ringba + Vapi.ai)
-- Deployed BI dashboards with drill‑through KPIs using Power BI & Sheets
-- Delivered custom Shopify automations (inventory sync, order routing)
-- Freelance on Upwork: 5★ client feedback for rapid deliverables
+### ⭐️ Proven Results
+- **Call‑tracking + SMS bots** (Ringba + Vapi.ai)  
+- **Interactive BI Dashboards** (Power BI + Google Sheets + Excel)  
+- **Upwork 5★ Freelance Projects** delivering rapid, high‑quality solutions  
 
-📎 **Want to know more about my skills?**  
-*(triggers “Want to know more about my Skills”)*
+---
 
-📬 **Want to know about my contact information?**  
-*(triggers “Want to know about my contact information”)*
+> **Want to know more about my skills?**  
+*(sends “Want to know more about my Skills” to the chat)*
+
+> **Want to know about my contact information?**  
+*(sends “Want to know about my contact information” to the chat)*
 `;
   },
 });
