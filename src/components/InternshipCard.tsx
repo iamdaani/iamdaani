@@ -3,18 +3,12 @@
 import { motion } from 'framer-motion';
 import { CalendarDays, Code2, Globe } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useChat } from 'ai/react';
 
-const ToukoumInternshipCard = () => {
-  const { append } = useChat();
+const InternshipCard = () => {
   const openMail = () => {
-    // fallback mail behavior, if needed
     window.open('mailto:raphaelgiraud12@gmail.com', '_blank');
   };
-
-  const handleContact = () => {
-    append({ role: 'user', content: 'Want to know about my contact information' });
-  };
+  const router = useRouter();
 
   return (
     <motion.div
@@ -26,6 +20,7 @@ const ToukoumInternshipCard = () => {
       {/* Header */}
       <div className="mb-6 flex flex-col items-center sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
+          {/* Avatar placeholder */}
           <div className="bg-muted h-16 w-16 overflow-hidden rounded-full shadow-md">
             <img
               src="/avatar-raphael.jpg"
@@ -38,7 +33,7 @@ const ToukoumInternshipCard = () => {
               Raphael Giraud
             </h2>
             <p className="text-muted-foreground text-sm">
-              Internship Application
+              Intership Application
             </p>
           </div>
         </div>
@@ -132,15 +127,15 @@ const ToukoumInternshipCard = () => {
 
       {/* Contact button */}
       <div className="mt-10 flex justify-center">
-        <button
-          onClick={handleContact}
+        <a
+          href="/chat?query=Can%20I%20get%20you%20contact%20info"
           className="cursor-pointer rounded-full bg-black px-6 py-3 font-semibold text-white transition-colors duration-300 hover:bg-zinc-800"
         >
           Contact me
-        </button>
+        </a>
       </div>
     </motion.div>
   );
 };
 
-export default ToukoumInternshipCard;
+export default InternshipCard;
