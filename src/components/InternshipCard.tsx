@@ -7,28 +7,21 @@ import Image from 'next/image';
 import { useChat } from 'ai/react';
 
 const InternshipCard = () => {
+  // ① Destructure append from useChat
   const { append } = useChat();
 
-  // 1️⃣ Automatically fetch internship summary when chat asks for it:
+  // ② On mount, append a message to trigger getInternship
   useEffect(() => {
-    const fetchInternship = async () => {
-      // If last user message contains “internship”, invoke the tool
-      const last = document
-        .querySelectorAll('.message.user')
-        .item(document.querySelectorAll('.message.user').length - 1)
-        ?.textContent ?? '';
-      if (/internship/i.test(last)) {
-        // Replace this with your actual function call logic or API call
-        const result = "Internship summary goes here."; // Placeholder
-        append({ role: 'assistant', content: result });
-      }
-    };
-    fetchInternship();
-  }, [append]);
+    append({ role: 'user', content: 'getInternship' });
+    // If you want to trigger a function call, ensure your backend handles this message appropriately.
+    // Optionally, you can debounce or check if already sent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // 2️⃣ “See more skills” and “Contact me”
+  // ③ Handlers for the other two tools
   const seeMoreSkills = () =>
     append({ role: 'user', content: 'Want to know more about my Skills' });
+
   const getContactInfo = () =>
     append({ role: 'user', content: 'Want to know about my contact information' });
 
@@ -45,14 +38,14 @@ const InternshipCard = () => {
           <div className="bg-muted h-16 w-16 overflow-hidden rounded-full shadow-md">
             <Image
               src="/ahmad.jpg"
-              alt="Ahmad Yar"
+              alt="Ahmad Yar"
               width={64}
               height={64}
               className="object-cover"
             />
           </div>
           <div>
-            <h2 className="text-foreground text-2xl font-semibold">Ahmad Yar</h2>
+            <h2 className="text-foreground text-2xl font-semibold">Ahmad Yar</h2>
             <p className="text-muted-foreground text-sm">Internship Seeker</p>
           </div>
         </div>
@@ -65,7 +58,7 @@ const InternshipCard = () => {
         </span>
       </div>
 
-      {/* Meta */}
+      {/* Meta info */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="flex items-start gap-3">
           <CalendarDays className="mt-1 h-5 w-5 text-blue-500" />
@@ -78,7 +71,7 @@ const InternshipCard = () => {
           <Globe className="mt-1 h-5 w-5 text-green-500" />
           <div>
             <p className="text-foreground text-sm font-medium">Location</p>
-            <p className="text-muted-foreground text-sm">Remote / Hybrid (PK)</p>
+            <p className="text-muted-foreground text-sm">Remote / Hybrid (Pakistan)</p>
           </div>
         </div>
       </div>
@@ -98,7 +91,7 @@ const InternshipCard = () => {
             <ul className="list-disc pl-4 space-y-1">
               <li>Power BI & Real‑Time Dashboards</li>
               <li>Google Sheets & Excel Automations</li>
-              <li>Voice → CRM → BI Workflow Flows</li>
+              <li>Voice ➔ CRM ➔ BI Workflow Flows</li>
               <li>
                 Upwork Freelance ·{' '}
                 <button
@@ -113,22 +106,30 @@ const InternshipCard = () => {
         </div>
       </div>
 
-      {/* Summary & Actions */}
-      <div className="mt-10 space-y-6">
-        <div>
-          <h3 className="text-foreground text-lg font-semibold">What I Bring</h3>
-          <p className="text-foreground text-sm">
-            End‑to‑end automation: data pipelines, AI agents, and dashboards—deployed as secure, scalable services.
-          </p>
-        </div>
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={getContactInfo}
-            className="rounded-full bg-black px-6 py-3 text-white font-semibold transition hover:bg-zinc-800"
-          >
-            Contact me
-          </button>
-        </div>
+      {/* What I Bring */}
+      <div className="mt-10">
+        <h3 className="text-foreground text-lg font-semibold">What I Bring</h3>
+        <p className="text-foreground text-sm mt-2">
+          End‑to‑end automation: data pipelines, AI agents, and dashboards—deployed as secure, scalable services.
+        </p>
+      </div>
+
+      {/* Goal */}
+      <div className="mt-8">
+        <h3 className="text-foreground text-lg font-semibold">Goal</h3>
+        <p className="text-foreground text-sm mt-2">
+          Join a forward‑thinking team to build AI‑driven automation at scale and grow into a technical leadership role.
+        </p>
+      </div>
+
+      {/* Contact button */}
+      <div className="mt-10 flex justify-center">
+        <button
+          onClick={getContactInfo}
+          className="rounded-full bg-black px-6 py-3 text-white font-semibold transition hover:bg-zinc-800"
+        >
+          Contact me
+        </button>
       </div>
     </motion.div>
   );
