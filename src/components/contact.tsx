@@ -11,7 +11,7 @@ export default function Contact() {
     email: 'ahamdjin34@gmail.com',
     phone: '+92 326-6255946',
     linkedin: 'https://www.linkedin.com/in/ahamd-yar/',
-    imageUrl: '/ahmad.jpg',
+    imageUrl: '/avatar-raphael.jpg',
   };
 
   const openLink = (url: string) => {
