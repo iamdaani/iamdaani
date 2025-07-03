@@ -1,29 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarDays, Globe, Cpu } from 'lucide-react';
-import Image from 'next/image';
+import { CalendarDays, Code2, Globe } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useChat } from 'ai/react';
 
-const InternshipCard = () => {
-  // ① Destructure append from useChat
+const ToukoumInternshipCard = () => {
   const { append } = useChat();
+  const openMail = () => {
+    // fallback mail behavior, if needed
+    window.open('mailto:raphaelgiraud12@gmail.com', '_blank');
+  };
 
-  // ② On mount, append a message to trigger getInternship
-  useEffect(() => {
-    append({ role: 'user', content: 'getInternship' });
-    // If you want to trigger a function call, ensure your backend handles this message appropriately.
-    // Optionally, you can debounce or check if already sent.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ③ Handlers for the other two tools
-  const seeMoreSkills = () =>
-    append({ role: 'user', content: 'Want to know more about my Skills' });
-
-  const getContactInfo = () =>
+  const handleContact = () => {
     append({ role: 'user', content: 'Want to know about my contact information' });
+  };
 
   return (
     <motion.div
@@ -33,100 +24,117 @@ const InternshipCard = () => {
       className="bg-accent mx-auto mt-8 w-full max-w-4xl rounded-3xl px-6 py-8 font-sans sm:px-10 md:px-16 md:py-12"
     >
       {/* Header */}
-      <div className="mb-6 flex flex-col items-center sm:flex-row sm:justify-between">
+      <div className="mb-6 flex flex-col items-center sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-muted h-16 w-16 overflow-hidden rounded-full shadow-md">
-            <Image
-              src="/ahmad.jpg"
-              alt="Ahmad Yar"
-              width={64}
-              height={64}
-              className="object-cover"
+            <img
+              src="/avatar-raphael.jpg"
+              alt="Raphael's avatar"
+              className="h-full w-full object-cover"
             />
           </div>
           <div>
-            <h2 className="text-foreground text-2xl font-semibold">Ahmad Yar</h2>
-            <p className="text-muted-foreground text-sm">Internship Seeker</p>
+            <h2 className="text-foreground text-2xl font-semibold">
+              Raphael Giraud
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Internship Application
+            </p>
           </div>
         </div>
-        <span className="mt-4 flex items-center gap-2 rounded-full border border-green-500 px-3 py-0.5 text-sm font-medium text-green-500 sm:mt-0">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+
+        {/* Live badge */}
+        <div className="mt-4 flex items-center gap-2 sm:mt-0">
+          <span className="flex items-center gap-1 rounded-full border border-green-500 px-3 py-0.5 text-sm font-medium text-green-500">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+            </span>
+            Live
           </span>
-          Live
-        </span>
+        </div>
       </div>
 
-      {/* Meta info */}
+      {/* Internship Info */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="flex items-start gap-3">
           <CalendarDays className="mt-1 h-5 w-5 text-blue-500" />
           <div>
             <p className="text-foreground text-sm font-medium">Duration</p>
-            <p className="text-muted-foreground text-sm">6 months (Sept ’25)</p>
+            <p className="text-muted-foreground text-sm">
+              6 months – starting September 2025 (fall 2025)
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
           <Globe className="mt-1 h-5 w-5 text-green-500" />
           <div>
             <p className="text-foreground text-sm font-medium">Location</p>
-            <p className="text-muted-foreground text-sm">Remote / Hybrid (Pakistan)</p>
+            <p className="text-muted-foreground text-sm">
+              Preferably San Francisco 🇺🇸
+            </p>
+          </div>
+        </div>
+
+        {/* Tech stack */}
+        <div className="flex items-start gap-3 sm:col-span-2">
+          <Code2 className="mt-1 h-5 w-5 text-purple-500" />
+          <div className="w-full">
+            <p className="text-foreground text-sm font-medium">Tech stack</p>
+            <div className="text-muted-foreground grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-2">
+              <ul className="decoration-none list-disc pl-4">
+                <li>Python, Next.js, TypeScript, Tailwind CSS</li>
+                <li>Vercel AI SDK, Supabase, Prisma</li>
+                <li>OpenAI, Mistral, Claude, Whisper</li>
+                <li>Prompt engineering, fine-tuning</li>
+              </ul>
+              <ul className="list-disc pl-4">
+                <li>Weaviate, Pinecone, vector DBs</li>
+                <li>Hugging Face Transformers</li>
+                <li>Tool routing, calling, RAG</li>
+                <li>Hackathons + AI agent workflows</li>
+                <li>
+                  <a
+                    href="/chat?query=What%20are%20your%20skills%3F%20Give%20me%20a%20list%20of%20your%20soft%20and%20hard%20skills."
+                    className="cursor-pointer items-center text-blue-500 underline"
+                  >
+                    See more
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tech stack */}
-      <div className="mt-8 flex items-start gap-3">
-        <Cpu className="mt-1 h-5 w-5 text-purple-500" />
-        <div className="w-full">
-          <p className="text-foreground text-sm font-medium mb-2">Tech stack</p>
-          <div className="text-muted-foreground grid grid-cols-1 gap-y-1 text-sm sm:grid-cols-2">
-            <ul className="list-disc pl-4 space-y-1">
-              <li>AWS Serverless & Data Warehousing</li>
-              <li>ETL & Orchestration (Glue, Airflow, n8n)</li>
-              <li>AI/ML & Prompt Engineering (OpenAI, Ollama)</li>
-              <li>Shopify Liquid, GraphQL, Webhooks</li>
-            </ul>
-            <ul className="list-disc pl-4 space-y-1">
-              <li>Power BI & Real‑Time Dashboards</li>
-              <li>Google Sheets & Excel Automations</li>
-              <li>Voice ➔ CRM ➔ BI Workflow Flows</li>
-              <li>
-                Upwork Freelance ·{' '}
-                <button
-                  onClick={seeMoreSkills}
-                  className="text-blue-600 underline hover:text-blue-800 transition-colors"
-                >
-                  See more
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* What I Bring */}
+      {/* What I bring */}
       <div className="mt-10">
-        <h3 className="text-foreground text-lg font-semibold">What I Bring</h3>
-        <p className="text-foreground text-sm mt-2">
-          End‑to‑end automation: data pipelines, AI agents, and dashboards—deployed as secure, scalable services.
+        <p className="text-foreground mb-2 text-lg font-semibold">
+          What I bring
+        </p>
+        <p className="text-foreground text-sm">
+          Real-world AI dev experience from Lighton (MCP, secure GPTs, RAG
+          pipelines). <br /> 3x hackathon wins (ETH Oxford, Paris Blockchain
+          Week, Colosseum Breakout on Solana). <br /> I ship fast, and love
+          building useful things that actually work.
         </p>
       </div>
 
       {/* Goal */}
       <div className="mt-8">
-        <h3 className="text-foreground text-lg font-semibold">Goal</h3>
-        <p className="text-foreground text-sm mt-2">
-          Join a forward‑thinking team to build AI‑driven automation at scale and grow into a technical leadership role.
+        <p className="text-foreground mb-2 text-lg font-semibold">Goal</p>
+        <p className="text-foreground text-sm">
+          Join a bold, innovative team building AI-powered tools that matter. I
+          want to improve fast, contribute hard, and leave a mark. I’m fast,
+          flexible, and HUNGRYYYYY 🔥
         </p>
       </div>
 
       {/* Contact button */}
       <div className="mt-10 flex justify-center">
         <button
-          onClick={getContactInfo}
-          className="rounded-full bg-black px-6 py-3 text-white font-semibold transition hover:bg-zinc-800"
+          onClick={handleContact}
+          className="cursor-pointer rounded-full bg-black px-6 py-3 font-semibold text-white transition-colors duration-300 hover:bg-zinc-800"
         >
           Contact me
         </button>
@@ -135,4 +143,4 @@ const InternshipCard = () => {
   );
 };
 
-export default InternshipCard;
+export default ToukoumInternshipCard;
