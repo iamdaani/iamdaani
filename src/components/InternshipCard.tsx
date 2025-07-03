@@ -115,7 +115,7 @@ const InternshipCard = () => {
       <motion.div variants={fadeInUp} className="mt-10">
         <p className="text-foreground mb-2 text-lg font-semibold">What I bring</p>
         <p className="text-foreground text-sm">
-          End-to-end automation pipelines built on modern AI platforms. Delivered full-stack systems integrating voice, APIs, spreadsheets, dashboards, and agents. Known for reliability, rapid iteration, and real-world delivery.
+         Crafting end-to-end automation & data pipelines with the slickness of a modern AI ninja on cloud steroids! I’ve slung together full-stack systems that juggle voice, APIs, spreadsheets, dashboards, and sassy AI agents like a circus pro. Famous for rock-solid reliability, lightning-fast iteration, and delivering real-world wins with a side of chuckles!
         </p>
       </motion.div>
 
