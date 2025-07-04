@@ -17,6 +17,7 @@ import {
   Users,
   Settings2,
   Zap,
+  ShoppingBag,
   Cloud,
 } from "lucide-react";
 
