@@ -161,7 +161,7 @@ const Skills = () => {
         "Product upload & listing",
       ],
       color: "bg-lime-100 text-lime-700 border border-lime-200",
-    }
+    },
 
     {
       category: "Soft Skills",
