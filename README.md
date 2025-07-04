@@ -5,7 +5,7 @@
 # World's first AI portfolio 🤖✨  
 
 **Static portfolios are dead.**  
-So I built [toukoum.fr](https://toukoum.fr).
+So I built [ahmadyar.site](https://ahmadyar.site).
 
 Instead of making you scroll endlessly, my portfolio adapts to *you*.  
 Ask a question — my AI avatar replies instantly.
@@ -21,11 +21,12 @@ Ask a question — my AI avatar replies instantly.
 This is not a portfolio.  
 It’s a **conversation tailored to your curiosity**.
 
-➡️ **Try it now:** [https://toukoum.fr](https://toukoum.fr)  
+➡️ **Try it now:** [https://ahmadyar.site](https://ahmadyar.site)  
 *What will you ask?*
 
 
 
+Creator: Toukoum
 #### 🔖 Tags
 
 `#AIPortfolio` `#InnovationInTech` `#DigitalResume` `#JobSearch` `#TechInnovation` `#WebDevelopment` `#FutureTech`
