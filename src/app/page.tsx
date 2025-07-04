@@ -22,7 +22,7 @@ const questions = {
   Me: 'Who are you? I want to know more about you.',
   Projects: 'What are your projects? What are you working on right now?',
   Skills: 'What are your skills? Give me a list of your soft and hard skills.',
-  Fun: 'What do you do for Fun? What are your hobbies?',
+  Fun: 'Show me your Gaming Highlights? What are your hobbies?',
   Contact:
     'How can I reach you? Can I get your contact info?',
 } as const;
