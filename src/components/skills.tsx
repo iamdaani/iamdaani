@@ -152,6 +152,18 @@ const Skills = () => {
       color: "bg-yellow-100 text-yellow-700 border border-yellow-200",
     },
     {
+      category: "Shopify Store Development",
+      icon: <ShoppingBag className="h-5 w-5" />,
+      skills: [
+        "Store design & customization",
+        "Shopify plugins",
+        "Winning product research",
+        "Product upload & listing",
+      ],
+      color: "bg-lime-100 text-lime-700 border border-lime-200",
+    }
+
+    {
       category: "Soft Skills",
       icon: <Users className="h-5 w-5" />,
       skills: [
