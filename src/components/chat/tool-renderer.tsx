@@ -7,7 +7,7 @@ import AllProjects from '../projects/AllProjects';
 import Resume from '../resume';
 import Skills from '../skills';
 import Sports from '../sport';
-import Experience from '../Experience';
+import Experience from '../experience';
 
 interface ToolRendererProps {
   toolInvocations: any[];
