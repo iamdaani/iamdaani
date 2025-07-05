@@ -9,7 +9,7 @@ import { SiUpwork, SiFiverr } from 'react-icons/si';
 const journey = [
   {
     icon: <Briefcase className="h-6 w-6 text-blue-500" />,
-    title: '🛍️ Shopify Assistant (2023)',
+    title: '🛍️ Shopify Assistant (2023 - 2024)',
     description: (
       <ul className="list-disc pl-5 space-y-1 text-muted-foreground text-sm">
         <li>Conducted deep product research for trending items.</li>
@@ -42,7 +42,7 @@ const journey = [
         <li>Built scalable solutions for small businesses and teams.</li>
         <li className="mt-2">
           <Link
-            href="https://ahmadyar.site/#projects"
+            href="https://www.ahmadyar.site/chat?query=can%20you%20share%20your%20experience"
             className="text-blue-600 hover:underline text-sm font-medium"
             target="_blank"
             rel="noopener noreferrer"
