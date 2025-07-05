@@ -46,7 +46,7 @@ const journey = [
   },
 ];
 
-const ExperienceJourney = () => {
+const Experience = () => {
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-16 font-sans">
       <motion.h2
@@ -120,4 +120,4 @@ const ExperienceJourney = () => {
   );
 };
 
-export default ExperienceJourney;
+export default Experience;
