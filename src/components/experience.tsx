@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Briefcase, BookOpen, Rocket, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { SiUpwork, SiFiverr } from 'react-icons/si';
 
 const journey = [
   {
@@ -53,11 +54,11 @@ const journey = [
     ),
     links: [
       {
-        label: '🧑‍💻 Upwork',
+        label: <div className="flex items-center gap-2"><SiUpwork className="text-green-600" /> Upwork</div>,
         href: 'https://www.upwork.com/freelancers/ahamdyaar',
       },
       {
-        label: '🎯 Fiverr',
+        label: <div className="flex items-center gap-2"><SiFiverr className="text-[#1DBF73]" /> Fiverr</div>,
         href: 'https://www.fiverr.com/ahmad_yxr',
       },
     ],
@@ -82,8 +83,13 @@ const journey = [
 const Experience = () => {
   return (
     <div className="relative z-10 mx-auto w-full max-w-5xl px-6 py-20 font-sans">
-      {/* Animated Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[#111827] via-[#1f2937] to-[#0f172a] opacity-30 blur-xl"></div>
+      {/* Subtle animated background particles */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.4 }}
+        transition={{ duration: 2, ease: 'easeInOut' }}
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-white via-gray-100 to-white animate-pulse"
+      />
 
       <motion.h2
         initial={{ opacity: 0, y: -20 }}
@@ -117,14 +123,14 @@ const Experience = () => {
               <div>{item.description}</div>
 
               {item.links && (
-                <div className="mt-4 flex flex-wrap gap-4">
+                <div className="mt-6 flex justify-center gap-6">
                   {item.links.map((link, i) => (
                     <Link
                       key={i}
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm font-medium"
+                      className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-foreground hover:underline"
                     >
                       {link.label}
                     </Link>
@@ -135,14 +141,15 @@ const Experience = () => {
               {item.certificates && (
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {item.certificates.map((src, i) => (
-                    <Image
-                      key={i}
-                      src={src}
-                      alt={`Certificate ${i + 1}`}
-                      width={600}
-                      height={400}
-                      className="rounded-lg border shadow-md object-contain"
-                    />
+                    <div key={i} className="flex items-center justify-center">
+                      <Image
+                        src={src}
+                        alt={`Certificate ${i + 1}`}
+                        width={500}
+                        height={350}
+                        className="rounded-lg border shadow-md object-contain max-h-[300px]"
+                      />
+                    </div>
                   ))}
                 </div>
               )}
