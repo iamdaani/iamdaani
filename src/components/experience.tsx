@@ -82,7 +82,7 @@ const journey = [
 
 const Experience = () => {
   return (
-    <div className="relative z-10 mx-auto w-full max-w-5xl px-6 py-20 font-sans">
+    <div className="relative z-0 mx-auto w-full max-w-5xl px-6 py-20 font-sans">
       {/* Subtle animated background particles */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -110,10 +110,15 @@ const Experience = () => {
             viewport={{ once: true }}
             className="relative pl-10"
           >
-            {/* Timeline Dot */}
-            <div className="absolute left-[-1.2rem] top-1 bg-background p-2 rounded-full shadow-md">
+            {/* Timeline Dot with Icon Animation */}
+            <motion.div
+              initial={{ scale: 0.8, rotate: -15 }}
+              whileInView={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+              className="absolute left-[-1.2rem] top-1 z-0 bg-background p-2 rounded-full shadow-md"
+            >
               {item.icon}
-            </div>
+            </motion.div>
 
             {/* Content */}
             <div className="bg-card/70 shadow-lg rounded-xl p-6 backdrop-blur-md">
