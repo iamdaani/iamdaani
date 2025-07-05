@@ -7,6 +7,7 @@ import AllProjects from '../projects/AllProjects';
 import Resume from '../resume';
 import Skills from '../skills';
 import Sports from '../sport';
+import Experience from '../Experience';
 
 interface ToolRendererProps {
   toolInvocations: any[];
@@ -85,6 +86,13 @@ export default function ToolRenderer({
                 <InternshipCard />
               </div>
             );
+            case 'getExperience':
+              return (
+                <div key={toolCallId} className="w-full rounded-lg">
+                  <Experience />
+                </div>
+             );
+
 
           // Default renderer for other tools
           default:
