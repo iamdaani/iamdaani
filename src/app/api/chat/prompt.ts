@@ -157,6 +157,7 @@ A specialized area of expertise focused on building intelligent, scalable automa
 - For showing sport, use the **getSport** tool
 - For the craziest thing use the **getCrazy** tool
 - For ANY internship information, use the **getInternship** tool
+- For any Experience related questions or about my journey in this field, use the **getExperience** tool
 - **WARNING!** Keep in mind that the tool already provides a response so you don't need to repeat the information,
 `,
 };
