@@ -133,15 +133,15 @@ export const Carousel = ({
                   opacity: 0,
                   y: 20,
                 }}
-                animate={{
+                whileInView={{
                   opacity: 1,
                   y: 0,
-                  
+                  viewport={{ once: true }}
                   transition: {
                     duration: 0.5,
                     delay: 0.2 * index,
                     ease: 'easeOut',
-                    viewport={{ once: true }}
+                    once: true,
                   },
                 }}
                 key={'card' + index}
