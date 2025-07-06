@@ -7,76 +7,61 @@ import { url } from 'inspector';
 // Enhanced project content array with all projects
 const PROJECT_CONTENT = [
   {
-    title: 'Synto',
+    title: 'Ringba Data Pipeline + Power BI Reporting',
     description:
-      'Synto is an AI-powered interface that transforms complex blockchain interactions into simple, natural language commands. Whether you want to send tokens, stake assets, swap coins, or even create NFTs or liquidity pools, just tell Synto what to do — no manual wallet interactions, no technical jargon. One of my biggest projects yet',
+      'Built a fully automated cloud data pipeline that pulls call tracking data from Ringba API daily, processes it through AWS Lambda & Glue, stores it in PostgreSQL (RDS), and visualizes it in Power BI. The entire system is serverless, scalable, and runs on a schedule without human involvement.',
     techStack: [
-      'Next.js',
-      'TailwindCSS',
-      'Web3.js',
-      'shadcn-ui',
-      'TypeScript',
-      'Phantom Wallet',
-      'OpenAI API',
-      'Vercel AI SDK',
-      'Solana Agent kit',
-      'Neon',
-      'Prisma'
+      'AWS Lambda',
+      'AWS EventBridge',
+      'Amazon S3',
+      'AWS Glue (PySpark)',
+      'Amazon RDS (PostgreSQL)',
+      'Power BI',
+      'Python',
+      'SQL',
+      'ODBC Connector',
+      'Boto3',
+      'APIs',
+      'CloudWatch Logs',
+      'ETL Pipelines',
+      'Data Automation',
+      'Daily Job Scheduling'
     ],
     date: '2025',
     links: [
       {
-        name: 'website',
-        url: 'https://synto.fun',
-      },
-      {
-        name: 'Launch Video',
-        url: 'https://www.youtube.com/watch?v=4QUE2KgKDUw',
-      },
-      {
-        name: 'X',
-        url: 'https://x.com/chainSynto',
-      },
-      {
-        name: 'Technical Video',
-        url: 'https://www.youtube.com/watch?v=1CjBLKPUwtA&feature=youtu.be',
-      },
-      {
-        name: 'Pitch Deck',
-        url: 'https://drive.google.com/file/d/1B3m44mEgv81rJHfjNfTKi147yX4raQed/view?usp=sharing',
-      },
-      {
-        name: 'Usage tutorial',
-        url: 'https://www.youtube.com/watch?v=PRu1cfvT2bA',
+        name: 'Project Blog',
+        url: 'https://ahamdjin.github.io/Ahmad-YAR/blog/Project-Ringba/',
       }
     ],
     images: [
       {
-        src: '/synto1.png',
-        alt: 'Synto landing page',
+        src: '/ringba-architecture.png',
+        alt: 'High-level architecture diagram showing AWS services and data flow',
       },
       {
-        src: '/synto2.png',
-        alt: 'Synto chat interface',
+        src: '/lambda-code.png',
+        alt: 'AWS Lambda code screenshot for Ringba API ingestion',
       },
       {
-        src: '/synto3.png',
-        alt: 'Synto chat interface',
+        src: '/glue-script.png',
+        alt: 'AWS Glue PySpark script for transforming and loading data',
       },
       {
-        src: '/synto4.png',
-        alt: 'Synto chat interface',
+        src: '/glue-logs.png',
+        alt: 'CloudWatch or AWS Glue log showing job success',
       },
       {
-        src: '/synto5.png',
-        alt: 'Synto chat interface',
+        src: '/powerbi-dashboard.png',
+        alt: 'Power BI dashboard showing Ringba call metrics',
       },
       {
-        src: '/synto6.png',
-        alt: 'Synto chat interface',
-      },
+        src: '/powerbi-query-editor.png',
+        alt: 'Power BI query editor showing PostgreSQL connection',
+      }
     ],
   },
+  
   {
     title: 'Rrate',
     description:
@@ -440,10 +425,10 @@ const ProjectContent = ({ project }: { project: ProjectProps }) => {
 // Main data export with updated content
 export const data = [
   {
-    category: 'Startup Project',
-    title: 'Synto',
-    src: '/syntopreview.png',
-    content: <ProjectContent project={{ title: 'Synto' }} />,
+    category: 'Client Project',
+    title: 'Ringba Data Pipeline + Power BI Reporting',
+    src: '/ringba-architecture.png',
+    content: <ProjectContent project={{ title: 'Ringba Data Pipeline + Power BI Reporting' }} />,
   },
   {
     category: 'Fun Tool',
