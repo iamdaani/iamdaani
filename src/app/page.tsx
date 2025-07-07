@@ -15,6 +15,7 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import GitHubButton from 'react-github-btn';
 
 /* ---------- quick-question data ---------- */
 const questions = {
@@ -22,7 +23,8 @@ const questions = {
   Projects: 'What are your projects? What are you working on right now?',
   Skills: 'What are your skills? Give me a list of your soft and hard skills.',
   Fun: 'Show me your Gaming Highlights? What are your hobbies?',
-  Contact: 'How can I reach you? Can I get your contact info?',
+  Contact:
+    'How can I reach you? Can I get your contact info?',
 } as const;
 
 const questionConfig = [
@@ -33,6 +35,7 @@ const questionConfig = [
   { key: 'Contact', color: '#C19433', icon: UserRoundSearch },
 ] as const;
 
+/* ---------- component ---------- */
 export default function Home() {
   const [input, setInput] = useState('');
   const router = useRouter();
@@ -41,6 +44,7 @@ export default function Home() {
   const goToChat = (query: string) =>
     router.push(`/chat?query=${encodeURIComponent(query)}`);
 
+  /* hero animations (unchanged) */
   const topElementVariants = {
     hidden: { opacity: 0, y: -60 },
     visible: {
@@ -59,11 +63,13 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Précharger les assets du chat en arrière-plan
     const img = new window.Image();
     img.src = '/landing-memojis.png';
 
+    // Précharger les vidéos aussi
     const linkWebm = document.createElement('link');
-    linkWebm.rel = 'preload';
+    linkWebm.rel = 'preload'; // Note: prefetch au lieu de preload
     linkWebm.as = 'video';
     linkWebm.href = '/final_memojis.webm';
     document.head.appendChild(linkWebm);
@@ -77,22 +83,23 @@ export default function Home() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pb-10 md:pb-20">
-      {/* Blurred Footer */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden z-0">
+      {/* big blurred footer word */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden">
         <div
-          className="hidden sm:block text-transparent font-black select-none text-[10rem] lg:text-[16rem] bg-gradient-to-b from-neutral-500/10 to-neutral-500/0 bg-clip-text leading-none"
+          className="hidden bg-gradient-to-b from-neutral-500/10 to-neutral-500/0 bg-clip-text text-[10rem] leading-none font-black text-transparent select-none sm:block lg:text-[16rem]"
           style={{ marginBottom: '-2.5rem' }}
         >
           Ahmad Yar
         </div>
       </div>
 
-      {/* Internship Badge */}
-      <div className="absolute top-6 left-6 z-[70]">
+
+      <div className="absolute top-6 left-6 z-20">
         <button
           onClick={() => goToChat('Are you looking for an internship?')}
           className="cursor-pointer relative flex items-center gap-2 rounded-full border bg-white/30 px-4 py-1.5 text-sm font-medium text-black shadow-md backdrop-blur-lg transition hover:bg-white/60"
         >
+          {/* Green pulse dot */}
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
@@ -101,14 +108,14 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Heading Section */}
+      {/* header */}
       <motion.div
-        className="z-[60] mb-8 flex flex-col items-center text-center md:mb-12 mt-24 md:mt-4"
+        className="z-1 mb-8 flex flex-col items-center text-center md:mb-12 mt-24 md:mt-4"
         variants={topElementVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="z-[80]">
+        <div className="z-100">
           <WelcomeModal />
         </div>
 
@@ -120,8 +127,8 @@ export default function Home() {
         </h1>
       </motion.div>
 
-      {/* Memoji */}
-      <div className="relative z-[60] h-52 w-48 overflow-hidden sm:h-72 sm:w-72">
+      {/* centre memoji */}
+      <div className="relative z-10 h-52 w-48 overflow-hidden sm:h-72 sm:w-72">
         <Image
           src="/landing-memojis.png"
           alt="Hero memoji"
@@ -132,13 +139,14 @@ export default function Home() {
         />
       </div>
 
-      {/* Input & Question Grid */}
+      {/* input + quick buttons */}
       <motion.div
         variants={bottomElementVariants}
         initial="hidden"
         animate="visible"
-        className="z-[60] mt-4 flex w-full flex-col items-center justify-center md:px-0"
+        className="z-10 mt-4 flex w-full flex-col items-center justify-center md:px-0"
       >
+        {/* free-form question */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -166,7 +174,7 @@ export default function Home() {
           </div>
         </form>
 
-        {/* Grid of Predefined Questions */}
+        {/* quick-question grid */}
         <div className="mt-4 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-5">
           {questionConfig.map(({ key, color, icon: Icon }) => (
             <Button
@@ -183,7 +191,6 @@ export default function Home() {
           ))}
         </div>
       </motion.div>
-
       <FluidCursor />
     </div>
   );
