@@ -2,7 +2,7 @@
 
 import FluidCursor from '@/components/FluidCursor';
 import { Button } from '@/components/ui/button';
-import { GithubButton } from '@/components/ui/github-button';
+
 import WelcomeModal from '@/components/welcome-modal';
 import { motion } from 'framer-motion';
 import {
