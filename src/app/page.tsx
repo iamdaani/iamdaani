@@ -123,7 +123,7 @@ export default function Home() {
           Hey, I'm Ahmad 👋
         </h2>
         <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
-          AI Portfolio
+          My Portfolio
         </h1>
       </motion.div>
 
