@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/chat/chat-bubble';
 import WelcomeModal from '@/components/welcome-modal';
 import { Info } from 'lucide-react';
-import GitHubButton from 'react-github-btn';
+
 import HelperBoost from './HelperBoost';
-import { GithubButton } from '../ui/github-button';
+
 
 // ClientOnly component for client-side rendering
 //@ts-ignore
