@@ -1,4 +1,5 @@
 'use client';
+
 import { useChat } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -17,33 +18,26 @@ import {
 } from '@/components/ui/chat/chat-bubble';
 import WelcomeModal from '@/components/welcome-modal';
 import { Info } from 'lucide-react';
-
 import HelperBoost from './HelperBoost';
 
 // ClientOnly component for client-side rendering
-// @ts-ignore
-const ClientOnly = ({ children }) => {
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  if (!hasMounted) {
-    return null;
-  }
-
+  if (!hasMounted) return null;
   return <>{children}</>;
 };
 
-// Define Avatar component props interface
 interface AvatarProps {
   hasActiveTool: boolean;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isTalking: boolean;
 }
 
-// Dynamic import of Avatar component
 const Avatar = dynamic<AvatarProps>(
   () =>
     Promise.resolve(({ hasActiveTool, videoRef, isTalking }: AvatarProps) => {
@@ -52,14 +46,9 @@ const Avatar = dynamic<AvatarProps>(
         const platform = window.navigator.platform;
         const maxTouchPoints = window.navigator.maxTouchPoints || 0;
 
-        const isIOSByUA =
-          /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-
+        const isIOSByUA = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
         const isIOSByPlatform = /iPad|iPhone|iPod/.test(platform);
-
-        const isIPadOS =
-          platform === 'MacIntel' && maxTouchPoints > 1 && !window.MSStream;
-
+        const isIPadOS = platform === 'MacIntel' && maxTouchPoints > 1;
         const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
 
         return isIOSByUA || isIOSByPlatform || isIPadOS || isSafari;
@@ -102,10 +91,7 @@ const MOTION_CONFIG = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: 20 },
-  transition: {
-    duration: 0.3,
-    ease: 'easeOut',
-  },
+  transition: { duration: 0.3, ease: 'easeOut' },
 };
 
 const Chat = () => {
@@ -130,51 +116,31 @@ const Chat = () => {
     append,
   } = useChat({
     onResponse: (response) => {
-      if (response) {
-        setLoadingSubmit(false);
-        setIsTalking(true);
-        if (videoRef.current) {
-          videoRef.current.play().catch((error) => {
-            console.error('Failed to play video:', error);
-          });
-        }
-      }
+      setLoadingSubmit(false);
+      setIsTalking(true);
+      videoRef.current?.play().catch((err) => console.error(err));
     },
     onFinish: () => {
       setLoadingSubmit(false);
       setIsTalking(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
+      videoRef.current?.pause();
     },
     onError: (error) => {
       setLoadingSubmit(false);
       setIsTalking(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-      console.error('Chat error:', error.message, error.cause);
+      videoRef.current?.pause();
       toast.error(`Error: ${error.message}`);
     },
-    onToolCall: (tool) => {
-      const toolName = tool.toolCall.toolName;
-      console.log('Tool call:', toolName);
-    },
+    onToolCall: (tool) => console.log('Tool call:', tool.toolCall.toolName),
   });
 
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
-    const latestAIMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'assistant'
-    );
-    const latestUserMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'user'
-    );
+    const aiIdx = messages.findLastIndex((m) => m.role === 'assistant');
+    const userIdx = messages.findLastIndex((m) => m.role === 'user');
 
     const result = {
-      currentAIMessage:
-        latestAIMessageIndex !== -1 ? messages[latestAIMessageIndex] : null,
-      latestUserMessage:
-        latestUserMessageIndex !== -1 ? messages[latestUserMessageIndex] : null,
+      currentAIMessage: aiIdx !== -1 ? messages[aiIdx] : null,
+      latestUserMessage: userIdx !== -1 ? messages[userIdx] : null,
       hasActiveTool: false,
     };
 
@@ -187,9 +153,7 @@ const Chat = () => {
         ) || false;
     }
 
-    if (latestAIMessageIndex < latestUserMessageIndex) {
-      result.currentAIMessage = null;
-    }
+    if (aiIdx < userIdx) result.currentAIMessage = null;
 
     return result;
   }, [messages]);
@@ -207,20 +171,11 @@ const Chat = () => {
   const submitQuery = (query: string) => {
     if (!query.trim() || isToolInProgress) return;
     setLoadingSubmit(true);
-    append({
-      role: 'user',
-      content: query,
-    });
+    append({ role: 'user', content: query });
   };
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.loop = true;
-      videoRef.current.muted = true;
-      videoRef.current.playsInline = true;
-      videoRef.current.pause();
-    }
-
+    videoRef.current?.pause();
     if (initialQuery && !autoSubmitted) {
       setAutoSubmitted(true);
       setInput('');
@@ -230,13 +185,8 @@ const Chat = () => {
 
   useEffect(() => {
     if (videoRef.current) {
-      if (isTalking) {
-        videoRef.current.play().catch((error) => {
-          console.error('Failed to play video:', error);
-        });
-      } else {
-        videoRef.current.pause();
-      }
+      if (isTalking) videoRef.current.play();
+      else videoRef.current.pause();
     }
   }, [isTalking]);
 
@@ -251,9 +201,7 @@ const Chat = () => {
     stop();
     setLoadingSubmit(false);
     setIsTalking(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
+    videoRef.current?.pause();
   };
 
   const isEmptyState =
@@ -262,7 +210,7 @@ const Chat = () => {
   const headerHeight = hasActiveTool ? 100 : 180;
 
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div className="relative min-h-screen">
       <div className="absolute top-6 right-8 z-51 flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
         <WelcomeModal
           trigger={
@@ -273,7 +221,6 @@ const Chat = () => {
         />
       </div>
 
-      {/* Fixed Avatar Header with Gradient */}
       <div
         className="fixed top-0 right-0 left-0 z-50"
         style={{
@@ -281,25 +228,16 @@ const Chat = () => {
             'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%)',
         }}
       >
-        <div
-          className={`transition-all duration-300 ease-in-out ${hasActiveTool ? 'pt-6 pb-0' : 'py-6'}`}
-        >
+        <div className={`transition-all duration-300 ease-in-out ${hasActiveTool ? 'pt-6 pb-0' : 'py-6'}`}>
           <div className="flex justify-center">
             <ClientOnly>
-              <Avatar
-                hasActiveTool={hasActiveTool}
-                videoRef={videoRef}
-                isTalking={isTalking}
-              />
+              <Avatar hasActiveTool={hasActiveTool} videoRef={videoRef} isTalking={isTalking} />
             </ClientOnly>
           </div>
 
           <AnimatePresence>
             {latestUserMessage && !currentAIMessage && (
-              <motion.div
-                {...MOTION_CONFIG}
-                className="mx-auto flex max-w-3xl px-4"
-              >
+              <motion.div {...MOTION_CONFIG} className="mx-auto flex max-w-3xl px-4">
                 <ChatBubble variant="sent">
                   <ChatBubbleMessage>
                     <ChatMessageContent
@@ -316,7 +254,6 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="container mx-auto flex h-full max-w-3xl flex-col">
         <div
           className="flex-1 overflow-y-auto px-2"
@@ -342,11 +279,7 @@ const Chat = () => {
               </div>
             ) : (
               loadingSubmit && (
-                <motion.div
-                  key="loading"
-                  {...MOTION_CONFIG}
-                  className="px-4 pt-18"
-                >
+                <motion.div key="loading" {...MOTION_CONFIG} className="px-4 pt-18">
                   <ChatBubble variant="received">
                     <ChatBubbleMessage isLoading />
                   </ChatBubble>
@@ -371,12 +304,12 @@ const Chat = () => {
         </div>
 
         <a
-          href="https://x.com/toukoumcode"
+          href="https://www.linkedin.com/in/ahamd-yar/"
           target="_blank"
           rel="noopener noreferrer"
           className="fixed right-3 bottom-0 z-10 mb-4 hidden cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm hover:underline md:block"
         >
-          @toukoum
+          @ahmadyar
         </a>
       </div>
     </div>
