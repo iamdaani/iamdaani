@@ -46,7 +46,7 @@ const Avatar = dynamic<AvatarProps>(
         const platform = window.navigator.platform;
         const maxTouchPoints = window.navigator.maxTouchPoints || 0;
 
-        const isIOSByUA = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+        const isIOSByUA = /iPad|iPhone|iPod/.test(userAgent) && ('MSStream' in window);
         const isIOSByPlatform = /iPad|iPhone|iPod/.test(platform);
         const isIPadOS = platform === 'MacIntel' && maxTouchPoints > 1;
         const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
