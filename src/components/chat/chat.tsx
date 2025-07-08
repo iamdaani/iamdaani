@@ -20,9 +20,8 @@ import { Info } from 'lucide-react';
 
 import HelperBoost from './HelperBoost';
 
-
 // ClientOnly component for client-side rendering
-//@ts-ignore
+// @ts-ignore
 const ClientOnly = ({ children }) => {
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -48,33 +47,24 @@ interface AvatarProps {
 const Avatar = dynamic<AvatarProps>(
   () =>
     Promise.resolve(({ hasActiveTool, videoRef, isTalking }: AvatarProps) => {
-      // This function will only execute on the client
       const isIOS = () => {
-        // Multiple detection methods
         const userAgent = window.navigator.userAgent;
         const platform = window.navigator.platform;
         const maxTouchPoints = window.navigator.maxTouchPoints || 0;
 
-        // UserAgent-based check
         const isIOSByUA =
-          //@ts-ignore
           /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
 
-        // Platform-based check
         const isIOSByPlatform = /iPad|iPhone|iPod/.test(platform);
 
-        // iPad Pro check
         const isIPadOS =
-          //@ts-ignore
           platform === 'MacIntel' && maxTouchPoints > 1 && !window.MSStream;
 
-        // Safari check
         const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
 
         return isIOSByUA || isIOSByPlatform || isIPadOS || isSafari;
       };
 
-      // Conditional rendering based on detection
       return (
         <div
           className={`flex items-center justify-center rounded-full transition-all duration-300 ${hasActiveTool ? 'h-20 w-20' : 'h-28 w-28'}`}
@@ -214,8 +204,7 @@ const Chat = () => {
       )
   );
 
-  //@ts-ignore
-  const submitQuery = (query) => {
+  const submitQuery = (query: string) => {
     if (!query.trim() || isToolInProgress) return;
     setLoadingSubmit(true);
     append({
@@ -251,8 +240,7 @@ const Chat = () => {
     }
   }, [isTalking]);
 
-  //@ts-ignore
-  const onSubmit = (e) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isToolInProgress) return;
     submitQuery(input);
@@ -268,11 +256,9 @@ const Chat = () => {
     }
   };
 
-  // Check if this is the initial empty state (no messages)
   const isEmptyState =
     !currentAIMessage && !latestUserMessage && !loadingSubmit;
 
-  // Calculate header height based on hasActiveTool
   const headerHeight = hasActiveTool ? 100 : 180;
 
   return (
@@ -285,7 +271,7 @@ const Chat = () => {
             </div>
           }
         />
-        
+      </div>
 
       {/* Fixed Avatar Header with Gradient */}
       <div
@@ -332,7 +318,6 @@ const Chat = () => {
 
       {/* Main Content Area */}
       <div className="container mx-auto flex h-full max-w-3xl flex-col">
-        {/* Scrollable Chat Content */}
         <div
           className="flex-1 overflow-y-auto px-2"
           style={{ paddingTop: `${headerHeight}px` }}
@@ -371,7 +356,6 @@ const Chat = () => {
           </AnimatePresence>
         </div>
 
-        {/* Fixed Bottom Bar */}
         <div className="sticky bottom-0 bg-white px-2 pt-3 md:px-0 md:pb-4">
           <div className="relative flex flex-col items-center gap-3">
             <HelperBoost submitQuery={submitQuery} setInput={setInput} />
@@ -385,6 +369,7 @@ const Chat = () => {
             />
           </div>
         </div>
+
         <a
           href="https://x.com/toukoumcode"
           target="_blank"
