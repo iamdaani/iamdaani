@@ -1,33 +1,28 @@
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { AnimatePresence, motion } from 'framer-motion';
-import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useChat } from "@ai-sdk/react";
+import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // Component imports
-import ChatBottombar from '@/components/chat/chat-bottombar';
-import ChatLanding from '@/components/chat/chat-landing';
-import ChatMessageContent from '@/components/chat/chat-message-content';
-import { SimplifiedChatView } from '@/components/chat/simple-chat-view';
+import ChatBottombar from "@/components/chat/chat-bottombar";
+import ChatLanding from "@/components/chat/chat-landing";
+import ChatMessageContent from "@/components/chat/chat-message-content";
+import { SimplifiedChatView } from "@/components/chat/simple-chat-view";
 import {
   ChatBubble,
   ChatBubbleMessage,
-} from '@/components/ui/chat/chat-bubble';
-import WelcomeModal from '@/components/welcome-modal';
-import { Info } from 'lucide-react';
-import HelperBoost from './HelperBoost';
+} from "@/components/ui/chat/chat-bubble";
+import WelcomeModal from "@/components/welcome-modal";
+import { Info } from "lucide-react";
+import HelperBoost from "./HelperBoost";
 
-// ClientOnly component for client-side rendering
 const ClientOnly = ({ children }: { children: React.ReactNode }) => {
   const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
+  useEffect(() => setHasMounted(true), []);
   if (!hasMounted) return null;
   return <>{children}</>;
 };
@@ -45,22 +40,20 @@ const Avatar = dynamic<AvatarProps>(
         const userAgent = window.navigator.userAgent;
         const platform = window.navigator.platform;
         const maxTouchPoints = window.navigator.maxTouchPoints || 0;
-
-        const isIOSByUA = /iPad|iPhone|iPod/.test(userAgent) && ('MSStream' in window);
+        const isIOSByUA = /iPad|iPhone|iPod/.test(userAgent) && !("MSStream" in window);
         const isIOSByPlatform = /iPad|iPhone|iPod/.test(platform);
-        const isIPadOS = platform === 'MacIntel' && maxTouchPoints > 1;
+        const isIPadOS = platform === "MacIntel" && maxTouchPoints > 1;
         const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-
         return isIOSByUA || isIOSByPlatform || isIPadOS || isSafari;
       };
 
       return (
         <div
-          className={`flex items-center justify-center rounded-full transition-all duration-300 ${hasActiveTool ? 'h-20 w-20' : 'h-28 w-28'}`}
+          className={`flex items-center justify-center rounded-full transition-all duration-300 ${hasActiveTool ? "h-20 w-20" : "h-28 w-28"}`}
         >
           <div
             className="relative cursor-pointer"
-            onClick={() => (window.location.href = '/')}
+            onClick={() => (window.location.href = "/")}
           >
             {isIOS() ? (
               <img
@@ -91,13 +84,16 @@ const MOTION_CONFIG = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: 20 },
-  transition: { duration: 0.3, ease: 'easeOut' },
+  transition: {
+    duration: 0.3,
+    ease: [0.4, 0, 0.2, 1],
+  } as const,
 };
 
-const Chat = () => {
+export default function Chat() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const searchParams = useSearchParams();
-  const initialQuery = searchParams.get('query');
+  const initialQuery = searchParams.get("query");
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
@@ -118,83 +114,71 @@ const Chat = () => {
     onResponse: (response) => {
       setLoadingSubmit(false);
       setIsTalking(true);
-      videoRef.current?.play().catch((err) => console.error(err));
+      videoRef.current?.play().catch((err) => console.error("play error:", err));
     },
     onFinish: () => {
       setLoadingSubmit(false);
       setIsTalking(false);
       videoRef.current?.pause();
     },
-    onError: (error) => {
+    onError: (err) => {
       setLoadingSubmit(false);
       setIsTalking(false);
       videoRef.current?.pause();
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Error: ${err.message}`);
     },
-    onToolCall: (tool) => console.log('Tool call:', tool.toolCall.toolName),
   });
 
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
-    const aiIdx = messages.findLastIndex((m) => m.role === 'assistant');
-    const userIdx = messages.findLastIndex((m) => m.role === 'user');
+    const aiIndex = messages.findLastIndex((m) => m.role === "assistant");
+    const userIndex = messages.findLastIndex((m) => m.role === "user");
 
     const result = {
-      currentAIMessage: aiIdx !== -1 ? messages[aiIdx] : null,
-      latestUserMessage: userIdx !== -1 ? messages[userIdx] : null,
+      currentAIMessage: aiIndex !== -1 ? messages[aiIndex] : null,
+      latestUserMessage: userIndex !== -1 ? messages[userIndex] : null,
       hasActiveTool: false,
     };
 
     if (result.currentAIMessage) {
       result.hasActiveTool =
         result.currentAIMessage.parts?.some(
-          (part) =>
-            part.type === 'tool-invocation' &&
-            part.toolInvocation?.state === 'result'
+          (p) => p.type === "tool-invocation" && p.toolInvocation?.state === "result"
         ) || false;
     }
 
-    if (aiIdx < userIdx) result.currentAIMessage = null;
+    if (aiIndex < userIndex) result.currentAIMessage = null;
 
     return result;
   }, [messages]);
 
   const isToolInProgress = messages.some(
     (m) =>
-      m.role === 'assistant' &&
+      m.role === "assistant" &&
       m.parts?.some(
-        (part) =>
-          part.type === 'tool-invocation' &&
-          part.toolInvocation?.state !== 'result'
+        (p) => p.type === "tool-invocation" && p.toolInvocation?.state !== "result"
       )
   );
 
-  const submitQuery = (query: string) => {
-    if (!query.trim() || isToolInProgress) return;
-    setLoadingSubmit(true);
-    append({ role: 'user', content: query });
-  };
-
-  useEffect(() => {
-    videoRef.current?.pause();
-    if (initialQuery && !autoSubmitted) {
-      setAutoSubmitted(true);
-      setInput('');
-      submitQuery(initialQuery);
-    }
-  }, [initialQuery, autoSubmitted]);
-
   useEffect(() => {
     if (videoRef.current) {
-      if (isTalking) videoRef.current.play();
-      else videoRef.current.pause();
+      videoRef.current.loop = true;
+      videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.pause();
     }
-  }, [isTalking]);
+    if (initialQuery && !autoSubmitted) {
+      setAutoSubmitted(true);
+      setInput("");
+      append({ role: "user", content: initialQuery });
+    }
+  }, [initialQuery, autoSubmitted]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isToolInProgress) return;
-    submitQuery(input);
-    setInput('');
+    setLoadingSubmit(true);
+    append({ role: "user", content: input });
+    setInput("");
   };
 
   const handleStop = () => {
@@ -204,14 +188,12 @@ const Chat = () => {
     videoRef.current?.pause();
   };
 
-  const isEmptyState =
-    !currentAIMessage && !latestUserMessage && !loadingSubmit;
-
+  const isEmptyState = !currentAIMessage && !latestUserMessage && !loadingSubmit;
   const headerHeight = hasActiveTool ? 100 : 180;
 
   return (
-    <div className="relative min-h-screen">
-      <div className="absolute top-6 right-8 z-51 flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
+    <div className="relative h-screen overflow-hidden">
+      <div className="absolute top-6 right-8 z-[51] flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
         <WelcomeModal
           trigger={
             <div className="hover:bg-accent cursor-pointer rounded-2xl px-3 py-1.5">
@@ -225,13 +207,19 @@ const Chat = () => {
         className="fixed top-0 right-0 left-0 z-50"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%)',
+            "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)",
         }}
       >
-        <div className={`transition-all duration-300 ease-in-out ${hasActiveTool ? 'pt-6 pb-0' : 'py-6'}`}>
+        <div
+          className={`transition-all duration-300 ease-in-out ${hasActiveTool ? "pt-6 pb-0" : "py-6"}`}
+        >
           <div className="flex justify-center">
             <ClientOnly>
-              <Avatar hasActiveTool={hasActiveTool} videoRef={videoRef} isTalking={isTalking} />
+              <Avatar
+                hasActiveTool={hasActiveTool}
+                videoRef={videoRef}
+                isTalking={isTalking}
+              />
             </ClientOnly>
           </div>
 
@@ -255,10 +243,7 @@ const Chat = () => {
       </div>
 
       <div className="container mx-auto flex h-full max-w-3xl flex-col">
-        <div
-          className="flex-1 overflow-y-auto px-2"
-          style={{ paddingTop: `${headerHeight}px` }}
-        >
+        <div className="flex-1 overflow-y-auto px-2" style={{ paddingTop: `${headerHeight}px` }}>
           <AnimatePresence mode="wait">
             {isEmptyState ? (
               <motion.div
@@ -266,7 +251,7 @@ const Chat = () => {
                 className="flex min-h-full items-center justify-center"
                 {...MOTION_CONFIG}
               >
-                <ChatLanding submitQuery={submitQuery} />
+                <ChatLanding submitQuery={(q: string) => append({ role: "user", content: q })} />
               </motion.div>
             ) : currentAIMessage ? (
               <div className="pb-4">
@@ -291,7 +276,7 @@ const Chat = () => {
 
         <div className="sticky bottom-0 bg-white px-2 pt-3 md:px-0 md:pb-4">
           <div className="relative flex flex-col items-center gap-3">
-            <HelperBoost submitQuery={submitQuery} setInput={setInput} />
+            <HelperBoost submitQuery={(q: string) => append({ role: "user", content: q })} setInput={setInput} />
             <ChatBottombar
               input={input}
               handleInputChange={handleInputChange}
@@ -314,6 +299,4 @@ const Chat = () => {
       </div>
     </div>
   );
-};
-
-export default Chat;
+}
