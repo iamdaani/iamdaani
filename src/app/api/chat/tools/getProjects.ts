@@ -4,10 +4,12 @@ import { z } from "zod";
 
 
 export const getProjects = tool({
-  description:
-    "This tool will show a list of all projects made by Ahmad and answer question anything related to projects",
+  description: "This tool will show a list of all projects made by Ahmad and answer question anything related to projects",
   parameters: z.object({}),
-  execute: async () => {
-    return "Here are all the projects made by Ahmad (above)! Don't hesitate to ask me more about them! (don't ";
+  async execute() {
+    const projects = await data;
+    // Add this line to hide the background content
+    document.querySelector('.bg-accent').style.display = 'none';
+    return projects;
   },
 });
