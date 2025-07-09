@@ -19,6 +19,7 @@ import WelcomeModal from '@/components/welcome-modal';
 import { Info } from 'lucide-react';
 import GitHubButton from 'react-github-btn';
 import HelperBoost from './HelperBoost';
+import { GithubButton } from '../ui/github-button';
 
 // ClientOnly component for client-side rendering
 //@ts-ignore
@@ -113,7 +114,7 @@ const MOTION_CONFIG = {
   exit: { opacity: 0, y: 20 },
   transition: {
     duration: 0.3,
-    ease: ['easeOut' as const],
+    ease: 'easeOut',
   },
 };
 
@@ -275,7 +276,7 @@ const Chat = () => {
   const headerHeight = hasActiveTool ? 100 : 180;
 
   return (
-    <div className="relative h-screen overflow-visible">
+    <div className="relative h-screen overflow-hidden">
       <div className="absolute top-6 right-8 z-51 flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
         <WelcomeModal
           trigger={
@@ -284,6 +285,14 @@ const Chat = () => {
             </div>
           }
         />
+        <div className="">
+          <GithubButton
+          animationDuration={1.5}
+          label="Star"
+          size={'sm'}
+          repoUrl="https://github.com/toukoum/portfolio"
+        />
+        </div>
       </div>
 
       {/* Fixed Avatar Header with Gradient */}
@@ -385,12 +394,12 @@ const Chat = () => {
           </div>
         </div>
         <a
-          href="https://www.linkedin.com/in/ahamd-yar/"
+          href="https://x.com/toukoumcode"
           target="_blank"
           rel="noopener noreferrer"
           className="fixed right-3 bottom-0 z-10 mb-4 hidden cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm hover:underline md:block"
         >
-          @ahmadyar
+          @toukoum
         </a>
       </div>
     </div>
