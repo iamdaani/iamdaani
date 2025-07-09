@@ -222,7 +222,7 @@ export const Card = ({
     <ModalPortal>
       <motion.div
         layoutId={layout ? `card-${card.title}` : undefined}
-        className="fixed inset-0 z-[100] bg-transparent"
+        className="fixed inset-0 z-[100] bg-transparent dark:text-white"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
