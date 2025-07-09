@@ -363,7 +363,7 @@ const ProjectContent = ({ project }: { project: ProjectProps }) => {
             <span>{projectData.date}</span>
           </div>
 
-          <p className="text-secondary-foreground font-sans text-base leading-relaxed md:text-lg">
+          <p className="font-sans text-base leading-relaxed md:text-lg text-gray-800 dark:text-gray-200">
             {projectData.description}
           </p>
 
