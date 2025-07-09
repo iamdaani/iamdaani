@@ -417,10 +417,10 @@ const ProjectContent = ({ project }: { project: ProjectProps }) => {
 // Main data export with updated content
 export const data = [
   {
-    category: 'Startup Project',
-    title: 'Synto',
-    src: '/syntopreview.png',
-    content: <ProjectContent project={{ title: 'Synto' }} />,
+    category: 'Data Engineering',
+    title: 'Ringba Call Tracking & Dashboard System',
+    src: '/ringba-architecture-diagram.png',
+    content: <ProjectContent project={{ title: 'Ringba Call Tracking & Dashboard System' }} />,
   },
   {
     category: 'Fun Tool',
