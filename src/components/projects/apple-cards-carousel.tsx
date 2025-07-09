@@ -271,7 +271,7 @@ export const Card = ({
             </div>
 
             {/* Content with consistent padding */}
-            <div className="px-8 pt-8 pb-14 md:px-14">{card.content}</div>
+            + <div className="px-8 pt-8 pb-14 md:px-14 text-black dark:text-white">{card.content}</div>
           </motion.div>
         </div>
       </motion.div>
