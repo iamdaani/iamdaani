@@ -7,76 +7,53 @@ import { url } from 'inspector';
 // Enhanced project content array with all projects
 const PROJECT_CONTENT = [
   {
-    title: 'Synto',
-    description:
-      'Synto is an AI-powered interface that transforms complex blockchain interactions into simple, natural language commands. Whether you want to send tokens, stake assets, swap coins, or even create NFTs or liquidity pools, just tell Synto what to do — no manual wallet interactions, no technical jargon. One of my biggest projects yet',
-    techStack: [
-      'Next.js',
-      'TailwindCSS',
-      'Web3.js',
-      'shadcn-ui',
-      'TypeScript',
-      'Phantom Wallet',
-      'OpenAI API',
-      'Vercel AI SDK',
-      'Solana Agent kit',
-      'Neon',
-      'Prisma'
-    ],
-    date: '2025',
-    links: [
-      {
-        name: 'website',
-        url: 'https://synto.fun',
-      },
-      {
-        name: 'Launch Video',
-        url: 'https://www.youtube.com/watch?v=4QUE2KgKDUw',
-      },
-      {
-        name: 'X',
-        url: 'https://x.com/chainSynto',
-      },
-      {
-        name: 'Technical Video',
-        url: 'https://www.youtube.com/watch?v=1CjBLKPUwtA&feature=youtu.be',
-      },
-      {
-        name: 'Pitch Deck',
-        url: 'https://drive.google.com/file/d/1B3m44mEgv81rJHfjNfTKi147yX4raQed/view?usp=sharing',
-      },
-      {
-        name: 'Usage tutorial',
-        url: 'https://www.youtube.com/watch?v=PRu1cfvT2bA',
-      }
-    ],
-    images: [
-      {
-        src: '/synto1.png',
-        alt: 'Synto landing page',
-      },
-      {
-        src: '/synto2.png',
-        alt: 'Synto chat interface',
-      },
-      {
-        src: '/synto3.png',
-        alt: 'Synto chat interface',
-      },
-      {
-        src: '/synto4.png',
-        alt: 'Synto chat interface',
-      },
-      {
-        src: '/synto5.png',
-        alt: 'Synto chat interface',
-      },
-      {
-        src: '/synto6.png',
-        alt: 'Synto chat interface',
-      },
-    ],
-  },
+    title: 'Ringba Call Tracking & Dashboard System',
+        description:
+          'An end-to-end pipeline that automates Ringba call data ingestion and reporting. From API data fetch to AWS Lambda, Glue transformation, RDS storage, and Power BI dashboard creation—this project automates everything. Designed for a client to monitor marketing calls, trends, and campaign performance.',
+        techStack: [
+          'AWS Lambda',
+          'AWS EventBridge',
+          'AWS S3',
+          'AWS Glue (PySpark)',
+          'PostgreSQL (RDS)',
+          'Power BI',
+          'Python',
+          'Ringba API'
+        ],
+        date: '2025',
+        links: [
+          {
+            name: 'Blog Post',
+            url: 'https://ahamdjin.github.io/Ahmad-YAR/blog/Project-Ringba/',
+          }
+        ],
+        images: [
+          {
+            src: '/ringba-architecture-diagram.png',
+            alt: 'High-Level Architecture Diagram of the Ringba Data Pipeline',
+          },
+          {
+            src: '/lambda-fetch-s3-code.png',
+            alt: 'Lambda Function Code to Fetch Ringba Data and Upload to S3',
+          },
+          {
+            src: '/glue-job-script.png',
+            alt: 'AWS Glue Job Script Showing PySpark Transformations',
+          },
+          {
+            src: '/cloudwatch-glue-logs.png',
+            alt: 'CloudWatch Logs Showing Success and Row Counts',
+          },
+          {
+            src: '/powerbi-call-dashboard.png',
+            alt: 'Power BI Dashboard Showing Ringba Call Metrics',
+          },
+          {
+            src: '/powerbi-query-editor.png',
+            alt: 'Power BI Query Editor Connecting to PostgreSQL via ODBC',
+          },
+        ],
+    },
   {
     title: 'Rrate',
     description:
