@@ -57,11 +57,11 @@ const PROJECT_CONTENT = [
   {
         title: 'Unlocking Lending Insights',
         description:
-          'A two-phase data analytics project for TheLook Fintech that analyzes loan activity and delivers a Power BI dashboard for decision-making. The report reveals trends from 2012–2019 and visualizes key loan health metrics including outstanding balance, borrower location, and income index.',
+          'A two-phase data analytics project for TheLook Fintech that analyzes loan activity and delivers a Looker dashboard for decision-making. The report reveals trends from 2012–2019 and visualizes key loan health metrics including outstanding balance, borrower location, and income index.',
         techStack: [
-          'Power BI',
+          'looker Studio',
           'Excel/CSV',
-          'DAX',
+          'Data Analyst',
           'Data Modeling',
           'SQL',
           'Data Visualization'
@@ -423,7 +423,7 @@ export const data = [
   },
   {
     category: 'Data Analytics',
-    title: 'Unlocking Lending Insights',
+    title: 'Metric Mindset',
     src: '/Unlocking-Lending-Insights-preview.png',
     content: <ProjectContent project={{ title: 'Unlocking Lending Insights' }} />,
   },
