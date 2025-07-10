@@ -20,9 +20,9 @@ import GitHubButton from 'react-github-btn';
 /* ---------- quick-question data ---------- */
 const questions = {
   Me: 'Who are you? I want to know more about you.',
-  Projects: 'What are your projects? What are you working on right now?',
+  Projects: 'I would like to see your projects?',
   Skills: 'What are your skills? Give me a list of your soft and hard skills.',
-  Fun: 'Show me your Gaming Highlights? What are your hobbies?',
+  Experience: 'Show me your Experience — where have you been, and what have you done?',
   Contact:
     'How can I reach you? Can I get your contact info?',
 } as const;
