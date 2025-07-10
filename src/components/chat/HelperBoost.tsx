@@ -35,11 +35,11 @@ interface HelperBoostProps {
 
 const questions = {
   Me: 'Who are you? I want to know more about you.',
-  Projects: 'What are your projects? What are you working on right now?',
+  Projects: 'I would like to see your projects?',
   Skills: 'What are your skills? Give me a list of your soft and hard skills.',
-  Fun: "What the craziest thing you've ever done? (mb?) What are your hobbies? ",
+  Fun: "What are your gaming highlights? (mb?) What are your hobbies? ",
   Contact:
-    'How can I reach you? What kind of project would make you say "yes" immediately?',
+    'Can i get your contact info? What kind of project would make you say "yes" immediately?',
 };
 
 const questionConfig = [
