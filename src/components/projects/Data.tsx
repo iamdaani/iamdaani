@@ -84,7 +84,8 @@ const PROJECT_CONTENT = [
           }
         ],
       },
-   title: 'Voice-Based Table Booking for Restaurang Göteborg',
+    {  
+       title: 'Voice-Based Table Booking for Restaurang Göteborg',
         description:
           'Developed for a real client, this project combines Voiceflow, Twilio, and n8n to let customers book restaurant tables via voice call. When a user dials the Twilio number, they interact with a Voiceflow assistant that gathers booking details. These details are forwarded to n8n, which adds the reservation to Google Calendar and sends an SMS confirmation. The workflow includes full error handling and logging.',
         techStack: [
