@@ -8,6 +8,6 @@ export const getProjects = tool({
     "This tool will show a list of all projects made by Ahmad",
   parameters: z.object({}),
   execute: async () => {
-    return "Here are all the projects made by Raphael (above)! Don't hesitate to ask me more about them! (don't ";
+    return "Here are all the projects made by Ahmad Yar (above)! Don't hesitate to ask me more about them! (don't ";
   },
 });
