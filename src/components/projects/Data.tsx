@@ -55,36 +55,35 @@ const PROJECT_CONTENT = [
         ],
     },
   {
-    title: 'Rrate',
-    description:
-      "Rrate is a fun website to allow user to compare his salary with the richest people in the world. Try it now it's online!",
-    techStack: ['Html', 'Css', 'Javascript'],
-    date: '2024',
-    links: [
-      {
-        name: 'website',
-        url: 'https://rrate.app',
+        title: 'Unlocking Lending Insights',
+        description:
+          'A two-phase data analytics project for TheLook Fintech that analyzes loan activity and delivers a Power BI dashboard for decision-making. The report reveals trends from 2012–2019 and visualizes key loan health metrics including outstanding balance, borrower location, and income index.',
+        techStack: [
+          'Power BI',
+          'Excel/CSV',
+          'DAX',
+          'Data Modeling',
+          'SQL',
+          'Data Visualization'
+        ],
+        date: '2025',
+        links: [
+          {
+            name: 'Case Study',
+            url: 'https://ahamdjin.github.io/Ahmad-YAR/blog/Lending-Insights/',
+          }
+        ],
+        images: [
+          {
+            src: '/loan-count-by-year.png',
+            alt: 'Line chart showing Loan Count by Year from 2012 to 2019',
+          },
+          {
+            src: '/interactive-dashboard.png',
+            alt: 'Power BI Dashboard with key loan metrics and borrower segmentation',
+          }
+        ],
       },
-      {
-        name: 'github',
-        url: 'https://github.com/toukoum/Rrate',
-      },
-    ],
-    images: [
-      {
-        src: '/rrate1.png',
-        alt: 'Rrate landing page',
-      },
-      {
-        src: '/rrate2.png',
-        alt: 'Rrate comparison page',
-      },
-      {
-        src: '/rrate3.png',
-        alt: 'Rrate comparison page',
-      },
-    ],
-  },
   {
     title: 'Defai',
     description:
@@ -423,10 +422,10 @@ export const data = [
     content: <ProjectContent project={{ title: 'Ringba Call Tracking & Dashboard System' }} />,
   },
   {
-    category: 'Fun Tool',
-    title: 'Rrate',
-    src: '/ratepreview.png',
-    content: <ProjectContent project={{ title: 'Rrate' }} />,
+    category: 'Data Analytics',
+    title: 'Unlocking Lending Insights',
+    src: '/loan-count-by-year.png',
+    content: <ProjectContent project={{ title: 'Unlocking Lending Insights' }} />,
   },
   {
     category: 'Hackathon Winner',
