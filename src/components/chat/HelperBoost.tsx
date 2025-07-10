@@ -37,7 +37,7 @@ const questions = {
   Me: 'Who are you? I want to know more about you.',
   Projects: 'I would like to see your projects?',
   Skills: 'What are your skills? Give me a list of your soft and hard skills.',
-  Fun: "What are your gaming highlights? (mb?) What are your hobbies? ",
+  Experience: "Show me your Experience — where have you been, and what have you done? ",
   Contact:
     'Can i get your contact info? What kind of project would make you say "yes" immediately?',
 };
