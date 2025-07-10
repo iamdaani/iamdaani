@@ -84,55 +84,39 @@ const PROJECT_CONTENT = [
           }
         ],
       },
-  {
-    title: 'Defai',
-    description:
-      "We Win ETHOXford hackathon by building DEFAI. DEFAI stands for Decentralized Finance Artificial Intelligence. It's an AI-powered chat interface that simplifies on-chain operations on the Avalanche blockchain by allowing users to interact using natural language. This makes complex DeFi operations accessible even for those with limited technical expertise.",
-    techStack: [
-      'Next.js',
-      'TailwindCSS',
-      'shadcn-ui',
-      'Vercel AI SDK',
-      'TypeScript',
-    ],
-    date: '2025',
-    links: [
-      {
-        name: 'website',
-        url: 'https://dorahacks.io/buidl/22605',
+   title: 'Voice-Based Table Booking for Restaurang Göteborg',
+        description:
+          'Developed for a real client, this project combines Voiceflow, Twilio, and n8n to let customers book restaurant tables via voice call. When a user dials the Twilio number, they interact with a Voiceflow assistant that gathers booking details. These details are forwarded to n8n, which adds the reservation to Google Calendar and sends an SMS confirmation. The workflow includes full error handling and logging.',
+        techStack: [
+          'n8n',
+          'Twilio Voice',
+          'Google Calendar API',
+          'Voiceflow',
+          'Node.js (for custom webhook handling)',
+          'Twilio SMS',
+        ],
+        date: '2025',
+        links: [
+          {
+            name: 'Workflow Screenshots',
+            url: '/restaurang-goteborg-n8n.png',
+          },
+        ],
+        images: [
+          {
+            src: '/restaurang-goteborg-voiceflow.png',
+            alt: 'Voiceflow assistant handling table booking call',
+          },
+          {
+            src: '/restaurang-goteborg-n8n.png',
+            alt: 'n8n automation flow integrating Twilio, Google Calendar, and SMS',
+          },
+          {
+            src: '/restaurang-goteborg-sms-confirmation.png',
+            alt: 'SMS confirmation sent to customer after voice booking',
+          },
+        ],
       },
-      {
-        name: 'github',
-        url: 'https://github.com/toukoum/DEFAI',
-      },
-      {
-        name: 'LinkedIn',
-        url: 'https://www.linkedin.com/feed/update/urn:li:activity:7299337190151483392/',
-      },
-      {
-        name: 'Youtube Video',
-        url: 'https://www.youtube.com/watch?v=N9O7los4-ng&t=34s&ab_channel=Toukoum',
-      }
-    ],
-    images: [
-      {
-        src: '/defai1.png',
-        alt: 'Landing Page of Defai',
-      },
-      {
-        src: '/defai2.png',
-        alt: 'Confirmation popup of Defai',
-      },
-      {
-        src: '/defai3.png',
-        alt: 'Chatbot of Defai',
-      },
-      {
-        src: '/defai4.jpeg',
-        alt: 'Winner team',
-      },
-    ],
-  },
   {
     title: 'Fitgear',
     description:
@@ -428,10 +412,10 @@ export const data = [
     content: <ProjectContent project={{ title: 'Unlocking Lending Insights' }} />,
   },
   {
-    category: 'Hackathon Winner',
-    title: 'Defai',
-    src: '/defaipreview.png',
-    content: <ProjectContent project={{ title: 'Defai' }} />,
+    category: 'AI Voice Automation',
+    title: 'AI Agent',
+    src: '/restaurang-goteborg-preview.png',
+    content: <ProjectContent project={{ title: 'Voice-Based Table Booking for Restaurang Göteborg' }} />,
   },
   {
     category: 'Hackathon Winner',
