@@ -45,7 +45,7 @@ const PROJECT_CONTENT = [
             alt: 'CloudWatch Logs Showing Success and Row Counts',
           },
           {
-            src: '/powerbi-call-dashboard.png',
+            src: '/powerbi-call-dashboard .png',
             alt: 'Power BI Dashboard Showing Ringba Call Metrics',
           },
           {
@@ -417,14 +417,14 @@ const ProjectContent = ({ project }: { project: ProjectProps }) => {
 export const data = [
   {
     category: 'Data Engineering',
-    title: 'Ringba Call Tracking & Dashboard System',
-    src: '/ringba-architecture-diagram.png',
+    title: 'Ringba Call Tracking Automation',
+    src: '/Ringba-Preview.png',
     content: <ProjectContent project={{ title: 'Ringba Call Tracking & Dashboard System' }} />,
   },
   {
     category: 'Data Analytics',
     title: 'Unlocking Lending Insights',
-    src: '/loan-count-by-year.png',
+    src: '/Unlocking-Lending-Insights-preview.png',
     content: <ProjectContent project={{ title: 'Unlocking Lending Insights' }} />,
   },
   {
