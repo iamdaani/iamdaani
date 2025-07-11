@@ -1,6 +1,6 @@
 
 
-![image](assets/readme-photo.png)
+
  
 # World's first AI portfolio 🤖✨  
 
