@@ -13,10 +13,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ahmad Yar",
+  title: "Daniyal Saleem",
   description: "Interactive portfolio with an AI-powered Memoji that answers questions about me, my skills, and my experience",
   keywords: [
-    "Ahmad Yar", 
+    "Daniyal Saleem", 
     "Portfolio", 
     "Developer", 
     "AI", 
@@ -29,22 +29,22 @@ export const metadata: Metadata = {
   ],
   authors: [
     {
-      name: "Ahmad Yar",
-      url: "https://toukoum.fr",
+      name: "Daniyal Saleem",
+      url: "https://www.iamdaani.com",
     },
   ],
   creator: "Toukoum",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://ahmadyar.site",
-    title: "Ahmad Yar",
+    url: "https://www.iamdaani.com",
+    title: "Daniyal Saleem",
     description: "Interactive portfolio with an AI-powered Memoji that answers questions about me",
-    siteName: "Ahmad Yar",
+    siteName: "Daniyal Saleem",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ahmad Yar",
+    title: "Daniyal Saleem",
     description: "Interactive portfolio with an AI-powered Memoji that answers questions about me",
     creator: "@ahmad-yar",
   },
