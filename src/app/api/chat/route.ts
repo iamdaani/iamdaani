@@ -1,5 +1,5 @@
 // src/app/api/chat/route.ts
-import { groq } from '@ai-sdk/groq';
+import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { SYSTEM_PROMPT } from './prompt';
 import { getContact } from './tools/getContact';
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
     // Kick off streaming with Groq + mistral-saba-24b
     const result = streamText({
-      model: groq('mistral-saba-24b'),
+      model: openai('gpt-4o-mini'),
       messages,
       toolCallStreaming: true,
       tools,
